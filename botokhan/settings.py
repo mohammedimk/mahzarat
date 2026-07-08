@@ -40,6 +40,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -116,10 +117,23 @@ USE_TZ = True
 # ----------------------------------------------------------------------
 # STATIC & MEDIA FILES
 # ----------------------------------------------------------------------
-STATIC_URL = 'static/'
-STATIC_ROOT = BASE_DIR / 'staticfiles'  # used by `collectstatic` in production
+#STATIC_URL = 'static/'
+#STATIC_ROOT = BASE_DIR / 'staticfiles'  # used by `collectstatic` in production
 # No STATICFILES_DIRS needed — Django's AppDirectoriesFinder automatically
 # picks up store/static/ since 'store' is in INSTALLED_APPS.
+
+
+STATIC_URL = "/static/"
+
+# The absolute path to the directory where collectstatic will collect static files for deployment
+STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles") 
+
+# Optional: Turn on WhiteNoise storage compression and caching support
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+
+
+
+
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'  # uploaded product/site photos live here
