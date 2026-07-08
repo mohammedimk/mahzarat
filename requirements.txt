@@ -5,3 +5,4 @@ Pillow>=10.0
 requests>=2.31        # talks to the Supabase Storage REST API
 python-dotenv>=1.0    # loads .env so credentials aren't hardcoded in settings.py
 gunicorn
+whitenoise>=6.7
