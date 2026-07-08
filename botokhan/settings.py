@@ -18,10 +18,11 @@ SECRET_KEY = os.environ.get('SECRET_KEY')
 
 
 # Turn this off in production.
-DEBUG = True
+DEBUG = False
 
-#ALLOWED_HOSTS = ['*']  # Tighten this to your real domain(s) before deploying.
-ALLOWED_HOSTS = ['mahzarat.onrender.com', 'localhost', '127.0.0.1']
+#ALLOWED_HOSTS = ['']  # Tighten this to your real domain(s) before deploying.
+
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'mahzarat.onrender.com']
 
 # ----------------------------------------------------------------------
 # APPLICATIONS
