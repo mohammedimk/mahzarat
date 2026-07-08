@@ -1,0 +1,98 @@
+{% extends 'store/base.html' %}
+{% load static %}
+{% load store_extras %}
+
+{% block content %}
+
+<header class="hero">
+  
+<marquee direction="left" scrollamount="10" behavior="alternate" bgcolor="white">
+  Welcome to Mahzarat Fasion Design Company
+</marquee>
+
+  <div class="container hero-grid">
+    <div>
+      <div class="hero-tag">Bauchi, Nigeria &middot; New Season</div>
+      <h1 class="serif">{{ settings_obj.hero_title|default:"Dress for the life you're actually living." }}</h1>
+      <p>{{ settings_obj.hero_subtitle }}</p>
+      <div class="hero-ctas">
+        <a href="#shop" class="btn">Shop the collection</a>
+        {% if featured %}<a href="{% url 'store:product_detail' featured.slug %}" class="btn btn-outline">View featured piece</a>{% endif %}
+      </div>
+    </div>
+    <div class="hero-visual">
+      {% if settings_obj.hero_image %}
+        <img class="hero-img-main" src="{{ settings_obj.hero_image.url }}" alt="Mahzarat Store">
+      {% elif featured and featured.image %}
+        <img class="hero-img-main" src="{{ featured.image.url }}" alt="{{ featured.name }}">
+      {% else %}
+        <img class="hero-img-main" src="{% static 'store/img/placeholder.svg' %}" alt="Mahzarat Store">
+      {% endif %}
+    </div>
+  </div>
+</header>
+
+
+
+<section class="rail-section">
+  <div class="container">
+    <div class="eyebrow">Shop by category</div>
+  </div>
+  <div class="container">
+    <div class="rail">
+      {% for cat in categories %}
+        {% with thumb=category_thumbs|get_item:cat.id %}
+        <a class="cat-chip" href="{% url 'store:category_detail' cat.slug %}">
+          {% if thumb and thumb.image %}
+            <img src="{{ thumb.image.url }}" alt="{{ cat.name }}">
+          {% else %}
+            <img src="{% static 'store/img/placeholder.svg' %}" alt="{{ cat.name }}">
+          {% endif %}
+          <span class="cat-title serif">{{ cat.name }}</span>
+        </a>
+        {% endwith %}
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<section class="section" id="shop">
+  <div class="container">
+
+    {% if featured %}
+    <div style="margin-bottom:50px;">
+      <div class="eyebrow">Editor's pick</div>
+      <div class="product-grid" style="grid-template-columns:1.2fr 1fr 1fr;margin-top:20px;">
+        {% include 'store/product_card.html' with product=featured %}
+      </div>
+    </div>
+    {% endif %}
+
+    <div class="section-head">
+      <h2>Latest Arrivals</h2>
+    </div>
+
+    {% if page_obj.object_list %}
+      <div class="product-grid">
+        {% for product in page_obj %}
+          {% include 'store/product_card.html' %}
+        {% endfor %}
+      </div>
+      {% include 'store/pagination.html' %}
+    {% else %}
+      <div class="empty-state">
+        <h2>No products yet</h2>
+        <p>Once an admin logs in and adds a product, it will appear here.</p>
+      </div>
+    {% endif %}
+  </div>
+</section>
+
+{{ products_json|json_script:"productsData" }}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  window.PRODUCTS = JSON.parse(document.getElementById('productsData').textContent);
+</script>
+{% endblock %}

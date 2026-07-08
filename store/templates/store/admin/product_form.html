@@ -1,0 +1,89 @@
+{% extends 'store/admin/base_admin.html' %}
+{% load static %}
+
+{% block admin_title %}{{ form_title }}{% endblock %}
+{% block admin_heading %}{{ form_title }}{% endblock %}
+
+{% block admin_content %}
+<div class="card">
+  <div class="card-head"><h2>{{ form_title }}</h2></div>
+
+  {% if form.non_field_errors or form.errors %}
+    <div class="alert alert-error">
+      {% for field in form %}
+        {% for error in field.errors %}<div>{{ field.label }}: {{ error }}</div>{% endfor %}
+      {% endfor %}
+      {% for error in form.non_field_errors %}<div>{{ error }}</div>{% endfor %}
+    </div>
+  {% endif %}
+
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+
+    <div class="form-grid">
+      <div>
+        <div class="form-group">
+          <label for="{{ form.name.id_for_label }}">Product name</label>
+          {{ form.name }}
+        </div>
+        <div class="form-group">
+          <label for="{{ form.description.id_for_label }}">Description</label>
+          {{ form.description }}
+        </div>
+        <div class="form-group">
+          <label for="{{ form.sizes.id_for_label }}">Available sizes</label>
+          {{ form.sizes }}
+          <div class="help-text">{{ form.sizes.help_text }}</div>
+        </div>
+        <div class="form-group">
+          <label for="{{ form.colors.id_for_label }}">Available colors</label>
+          {{ form.colors }}
+          <div class="help-text">{{ form.colors.help_text }}</div>
+        </div>
+      </div>
+
+      <div>
+        <div class="form-group">
+          <label for="{{ form.category.id_for_label }}">Category</label>
+          {{ form.category }}
+        </div>
+        <div class="form-group">
+          <label for="{{ form.price.id_for_label }}">Price ({{ currency_symbol }})</label>
+          {{ form.price }}
+        </div>
+        <div class="form-group">
+          <label for="{{ form.old_price.id_for_label }}">Original price ({{ currency_symbol }}) — optional, shows as struck-through</label>
+          {{ form.old_price }}
+        </div>
+        <div class="form-group">
+          <label for="{{ form.tag.id_for_label }}">Badge</label>
+          {{ form.tag }}
+        </div>
+        <div class="form-group">
+          <label for="{{ form.status.id_for_label }}">Status</label>
+          {{ form.status }}
+        </div>
+        <div class="check-row">
+          {{ form.is_featured }}
+          <label for="{{ form.is_featured.id_for_label }}" style="margin:0;">Feature in "Editor's Picks" on the homepage</label>
+        </div>
+
+        {% if product and product.image %}
+        <div class="form-group">
+          <label>Current photo</label>
+          <img class="current-img" src="{{ product.image.url }}" alt="">
+        </div>
+        {% endif %}
+
+        <div class="form-group">
+          <label for="{{ form.image.id_for_label }}">{% if product %}Replace photo{% else %}Product photo{% endif %}</label>
+          {{ form.image }}
+          <div class="help-text">JPG, PNG, WEBP or GIF, up to 5MB.{% if product %} Leave empty to keep the current photo.{% endif %}</div>
+        </div>
+
+        <button type="submit" class="btn btn-gold btn-block">{{ submit_label }}</button>
+      </div>
+    </div>
+  </form>
+</div>
+{% endblock %}

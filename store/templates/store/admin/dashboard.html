@@ -1,0 +1,70 @@
+{% extends 'store/admin/base_admin.html' %}
+{% load static %}
+{% load store_extras %}
+
+{% block admin_title %}Dashboard{% endblock %}
+{% block admin_heading %}Dashboard{% endblock %}
+
+{% block admin_content %}
+<div class="stat-grid">
+  <div class="stat-card"><div class="num">{{ stats.total }}</div><div class="label">Total products</div></div>
+  <div class="stat-card"><div class="num">{{ stats.active }}</div><div class="label">Active</div></div>
+  <div class="stat-card"><div class="num">{{ stats.inactive }}</div><div class="label">Inactive</div></div>
+  <div class="stat-card"><div class="num">{{ stats.categories }}</div><div class="label">Categories</div></div>
+</div>
+
+<div class="card">
+  <div class="card-head">
+    <h2>All Products</h2>
+    <a href="{% url 'store:add_product' %}" class="btn btn-gold btn-sm">+ Add Product</a>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Photo</th>
+        <th>Name</th>
+        <th>Category</th>
+        <th>Price</th>
+        <th>Status</th>
+        <th>Views</th>
+        <th>Date</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% if not page_obj.object_list %}
+        <tr class="empty-row"><td colspan="8">No products yet. <a href="{% url 'store:add_product' %}">Add your first product</a>.</td></tr>
+      {% endif %}
+      {% for product in page_obj %}
+        <tr>
+          <td>
+            {% if product.image %}
+              <img class="thumb" src="{{ product.image.url }}" alt="">
+            {% else %}
+              <img class="thumb" src="{% static 'store/img/placeholder.svg' %}" alt="">
+            {% endif %}
+          </td>
+          <td>{{ product.name|truncatechars:40 }}{% if product.is_featured %}<span class="badge badge-featured">Featured</span>{% endif %}</td>
+          <td>{{ product.category.name }}</td>
+          <td>{{ product.price|currency }}</td>
+          <td><span class="badge badge-{{ product.status }}">{{ product.get_status_display }}</span></td>
+          <td>{{ product.views }}</td>
+          <td>{{ product.created_at|date:"M j, Y" }}</td>
+          <td>
+            <div class="row-actions">
+              <a class="btn btn-outline btn-sm" href="{% url 'store:edit_product' product.pk %}">Edit</a>
+              <form method="post" action="{% url 'store:delete_product' product.pk %}" onsubmit="return confirm('Delete this product? This cannot be undone.');">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+              </form>
+            </div>
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  {% include 'store/pagination.html' %}
+</div>
+{% endblock %}

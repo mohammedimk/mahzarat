@@ -1,0 +1,36 @@
+{% extends 'store/base.html' %}
+
+{% block title %}{{ category.name }} | Mahzarat Store{% endblock %}
+{% block description %}Shop {{ category.name }} at Mahzarat Store.{% endblock %}
+
+{% block content %}
+<div class="section" style="padding-top:150px;">
+  <div class="container">
+    <div class="section-head">
+      <h2>{{ category.name }}</h2>
+    </div>
+
+    {% if page_obj.object_list %}
+      <div class="product-grid">
+        {% for product in page_obj %}
+          {% include 'store/product_card.html' %}
+        {% endfor %}
+      </div>
+      {% include 'store/pagination.html' %}
+    {% else %}
+      <div class="empty-state">
+        <h2>No products yet</h2>
+        <p>There's nothing in {{ category.name }} right now — check back soon.</p>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+{{ products_json|json_script:"productsData" }}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  window.PRODUCTS = JSON.parse(document.getElementById('productsData').textContent);
+</script>
+{% endblock %}

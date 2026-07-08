@@ -1,0 +1,34 @@
+{% extends 'store/base.html' %}
+
+{% block title %}Search: {{ query }} | Botokhan Store{% endblock %}
+
+{% block content %}
+<div class="section" style="padding-top:150px;">
+  <div class="container">
+    <div class="section-head">
+      <h2>Search results for "{{ query }}"</h2>
+    </div>
+
+    {% if not query %}
+      <div class="empty-state"><h2>Type something to search</h2><p>Use the search box above to find products by name or description.</p></div>
+    {% elif not page_obj.object_list %}
+      <div class="empty-state"><h2>No results found</h2><p>Try a different keyword.</p></div>
+    {% else %}
+      <div class="product-grid">
+        {% for product in page_obj %}
+          {% include 'store/product_card.html' %}
+        {% endfor %}
+      </div>
+      {% include 'store/pagination.html' %}
+    {% endif %}
+  </div>
+</div>
+
+{{ products_json|json_script:"productsData" }}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  window.PRODUCTS = JSON.parse(document.getElementById('productsData').textContent);
+</script>
+{% endblock %}

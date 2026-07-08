@@ -1,0 +1,33 @@
+{% load store_extras %}
+{% load static %}
+<article class="product-card">
+  <div class="product-media">
+    {% if product.tag %}<span class="product-tagline">{{ product.tag }}</span>{% endif %}
+    <a href="{% url 'store:product_detail' product.slug %}">
+      {% if product.image %}
+        <img src="{{ product.image.url }}" alt="{{ product.name }}" loading="lazy">
+      {% else %}
+        <img src="{% static 'store/img/placeholder.svg' %}" alt="{{ product.name }}" loading="lazy">
+      {% endif %}
+    </a>
+    <button class="wishlist-btn" data-id="{{ product.id }}" aria-label="Add to wishlist">
+      <svg viewBox="0 0 24 24"><path d="M12 21s-7.5-4.9-10-9.3C.5 8.4 2.2 5 5.6 5c2 0 3.3 1 4.4 2.6C11.1 6 12.4 5 14.4 5 17.8 5 19.5 8.4 22 11.7 19.5 16.1 12 21 12 21z"/></svg>
+    </button>
+    <div class="quick-add" data-id="{{ product.id }}">Quick view</div>
+  </div>
+  <div class="product-info">
+    <div class="p-cat">{{ product.category.name }}</div>
+    <h3><a href="{% url 'store:product_detail' product.slug %}">{{ product.name }}</a></h3>
+    {% with colors=product.colors_list %}
+      {% if colors %}
+      <div class="swatches">
+        {% for c in colors %}<span class="swatch" style="background:{{ c }}"></span>{% endfor %}
+      </div>
+      {% endif %}
+    {% endwith %}
+    <div class="price-row">
+      <span class="price">{{ product.price|currency }}</span>
+      {% if product.old_price %}<span class="price-old">{{ product.old_price|currency }}</span>{% endif %}
+    </div>
+  </div>
+</article>

@@ -1,0 +1,75 @@
+{% extends 'store/admin/base_admin.html' %}
+{% load static %}
+
+{% block admin_title %}Homepage Photos{% endblock %}
+{% block admin_heading %}Homepage Photos{% endblock %}
+
+{% block admin_content %}
+<div class="card">
+  <div class="card-head"><h2>Hero &amp; Lookbook</h2></div>
+
+  {% if form.non_field_errors or form.errors %}
+    <div class="alert alert-error">
+      {% for field in form %}
+        {% for error in field.errors %}<div>{{ field.label }}: {{ error }}</div>{% endfor %}
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+
+    <div class="form-grid">
+      <div>
+        <div class="form-group">
+          <label for="{{ form.hero_title.id_for_label }}">Hero headline</label>
+          {{ form.hero_title }}
+        </div>
+        <div class="form-group">
+          <label for="{{ form.hero_subtitle.id_for_label }}">Hero subtitle</label>
+          {{ form.hero_subtitle }}
+        </div>
+      </div>
+
+      <div>
+        <div class="form-group">
+          <label>Current hero photo</label>
+          {% if form.instance.hero_image %}
+            <img class="current-img" src="{{ form.instance.hero_image.url }}" alt="">
+          {% else %}
+            <div class="help-text">No hero photo set — the latest product photo is used instead.</div>
+          {% endif %}
+        </div>
+        <div class="form-group">
+          <label for="{{ form.hero_image.id_for_label }}">Replace hero photo</label>
+          {{ form.hero_image }}
+        </div>
+
+        <div class="form-group">
+          <label>Current lookbook photo 1</label>
+          {% if form.instance.lookbook_image_1 %}
+            <img class="current-img" src="{{ form.instance.lookbook_image_1.url }}" alt="">
+          {% endif %}
+        </div>
+        <div class="form-group">
+          <label for="{{ form.lookbook_image_1.id_for_label }}">Replace lookbook photo 1</label>
+          {{ form.lookbook_image_1 }}
+        </div>
+
+        <div class="form-group">
+          <label>Current lookbook photo 2</label>
+          {% if form.instance.lookbook_image_2 %}
+            <img class="current-img" src="{{ form.instance.lookbook_image_2.url }}" alt="">
+          {% endif %}
+        </div>
+        <div class="form-group">
+          <label for="{{ form.lookbook_image_2.id_for_label }}">Replace lookbook photo 2</label>
+          {{ form.lookbook_image_2 }}
+        </div>
+
+        <button type="submit" class="btn btn-gold btn-block">Save Changes</button>
+      </div>
+    </div>
+  </form>
+</div>
+{% endblock %}

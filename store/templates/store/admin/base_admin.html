@@ -1,0 +1,42 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block admin_title %}Dashboard{% endblock %} | Mahzarat Store Admin</title>
+<link rel="stylesheet" href="{% static 'store/css/admin.css' %}">
+</head>
+<body>
+
+<div class="admin-shell">
+  <aside class="admin-sidebar">
+    <div class="brand">Botokhan<span>Admin</span></div>
+    <nav class="admin-nav">
+      <a href="{% url 'store:admin_dashboard' %}" class="{% if active_admin_nav == 'dashboard' %}active{% endif %}">📊 <span>Dashboard</span></a>
+      <a href="{% url 'store:add_product' %}" class="{% if active_admin_nav == 'add' %}active{% endif %}">📝 <span>Add Product</span></a>
+      <a href="{% url 'store:admin_dashboard' %}" class="{% if active_admin_nav == 'list' %}active{% endif %}">🛍️ <span>All Products</span></a>
+      <a href="{% url 'store:admin_settings' %}" class="{% if active_admin_nav == 'settings' %}active{% endif %}">🖼️ <span>Homepage Photos</span></a>
+      <a href="{% url 'store:index' %}" target="_blank">🌐 <span>View Store</span></a>
+      <div class="divider"></div>
+      <a href="{% url 'store:admin_logout' %}">🚪 <span>Logout</span></a>
+    </nav>
+  </aside>
+
+  <main class="admin-main">
+    <div class="admin-topbar">
+      <h1>{% block admin_heading %}Dashboard{% endblock %}</h1>
+      <div class="admin-user">Signed in as <strong>{{ request.user.first_name|default:request.user.username }}</strong></div>
+    </div>
+    <div class="admin-content">
+      {% if messages %}
+        {% for message in messages %}
+          <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+      {% block admin_content %}{% endblock %}
+    </div>
+  </main>
+</div>
+</body>
+</html>

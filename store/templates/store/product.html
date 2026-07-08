@@ -1,0 +1,95 @@
+{% extends 'store/base.html' %}
+{% load static %}
+{% load store_extras %}
+
+{% block title %}{{ product.name }} | Mahzarat Store{% endblock %}
+{% block description %}{{ product.description|truncatechars:150 }}{% endblock %}
+
+{% block content %}
+<div class="section" style="padding-top:150px;">
+  <div class="container">
+    <div class="product-detail">
+      <div class="media">
+        {% if product.image %}
+          <img src="{{ product.image.url }}" alt="{{ product.name }}">
+        {% else %}
+          <img src="{% static 'store/img/placeholder.svg' %}" alt="{{ product.name }}">
+        {% endif %}
+      </div>
+      <div class="info">
+        <div class="eyebrow">{{ product.category.name }}</div>
+        <h1>{{ product.name }}</h1>
+        <div class="price-row">
+          <span class="price">{{ product.price|currency }}</span>
+          {% if product.old_price %}<span class="price-old">{{ product.old_price|currency }}</span>{% endif %}
+        </div>
+        <p class="desc">{{ product.description|linebreaksbr }}</p>
+
+        {% with sizes=product.sizes_list %}
+        <div class="size-row" id="pdSizes">
+          {% if sizes %}
+            {% for s in sizes %}
+              <button class="size-btn {% if forloop.first %}active{% endif %}" data-size="{{ s }}">{{ s }}</button>
+            {% endfor %}
+          {% else %}
+            <button class="size-btn active" data-size="One Size">One Size</button>
+          {% endif %}
+        </div>
+        {% endwith %}
+
+        {% with colors=product.colors_list %}
+          {% if colors %}
+          <div class="color-row">
+            {% for c in colors %}
+              <span class="color-dot {% if forloop.first %}active{% endif %}" style="background:{{ c }}" data-color="{{ c }}"></span>
+            {% endfor %}
+          </div>
+          {% endif %}
+        {% endwith %}
+
+        <button class="btn btn-gold" id="pdAddToCart" style="width:100%;" data-id="{{ product.id }}">Add to bag</button>
+      </div>
+    </div>
+
+    {% if related %}
+    <div class="related-wrap">
+      <div class="section-head"><h2>You may also like</h2></div>
+      <div class="product-grid">
+        {% for p in related %}
+          {% include 'store/product_card.html' with product=p %}
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+{{ products_json|json_script:"productsData" }}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  window.PRODUCTS = JSON.parse(document.getElementById('productsData').textContent);
+
+  document.getElementById('pdSizes').addEventListener('click', e=>{
+    const b = e.target.closest('.size-btn');
+    if(!b) return;
+    document.querySelectorAll('#pdSizes .size-btn').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+  });
+  document.querySelectorAll('.color-row .color-dot').forEach(dot=>{
+    dot.addEventListener('click', ()=>{
+      document.querySelectorAll('.color-row .color-dot').forEach(d=>d.classList.remove('active'));
+      dot.classList.add('active');
+    });
+  });
+
+  document.getElementById('pdAddToCart').addEventListener('click', function(){
+    const id = Number(this.dataset.id);
+    const product = window.PRODUCTS.find(p => p.id === id);
+    const activeSizeBtn = document.querySelector('#pdSizes .size-btn.active');
+    const size = activeSizeBtn ? activeSizeBtn.dataset.size : null;
+    if(product) addToCart(product, size);
+  });
+</script>
+{% endblock %}

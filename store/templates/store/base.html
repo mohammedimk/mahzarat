@@ -1,0 +1,276 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}Mahzarat Fasion Design — Women's Fashion &amp; Clothing{% endblock %}</title>
+<meta name="description" content="{% block description %}Contemporary women's clothing — dresses, ankara & prints, co-ord sets, outerwear and accessories.{% endblock %}">
+<link rel="stylesheet" href="{% static 'store/css/style.css' %}">
+</head>
+<body>
+    
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="{% url 'store:index' %}" class="logo">Mahzarat Store<span>.</span></a>
+
+    <div class="nav-links" id="navLinks">
+      <a href="{% url 'store:index' %}" class="{% if active_nav == 'home' %}active{% endif %}">Home</a>
+
+      {% for cat in nav_categories %}
+
+        <a href="{% url 'store:category_detail' cat.slug %}" class="{% if active_category_slug == cat.slug %}active{% endif %}">{{ cat.name }}</a>
+
+      {% endfor %}
+
+
+    </div>
+
+
+    <div class="nav-actions">
+      <form class="nav-search" action="{% url 'store:search' %}" method="get">
+        <input type="text" name="q" placeholder="Search…" value="{{ request.GET.q|default:'' }}" required>
+        <button type="submit">Go</button>
+      </form>
+      <button class="icon-btn" id="wishNavBtn" aria-label="Wishlist">
+        <svg viewBox="0 0 24 24"><path d="M12 21s-7.5-4.9-10-9.3C.5 8.4 2.2 5 5.6 5c2 0 3.3 1 4.4 2.6C11.1 6 12.4 5 14.4 5 17.8 5 19.5 8.4 22 11.7 19.5 16.1 12 21 12 21z"/></svg>
+      </button>
+      <button class="icon-btn" id="cartBtn" aria-label="Cart">
+        <svg viewBox="0 0 24 24"><path d="M6 8h12l-1 12H7L6 8z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg>
+        <span class="cart-count" id="cartCount">0</span>
+      </button>
+      <button class="burger" id="burgerBtn" aria-label="Menu"><span></span><span></span><span></span></button>
+    </div>
+  </div>
+</nav>
+
+
+{% if messages %}
+<div class="flash">
+  {% for message in messages %}
+    <div class="flash-box flash-{{ message.tags }}">{{ message }}</div>
+  {% endfor %}
+
+  
+</div>
+{% endif %}
+
+{% block content %}
+
+{% endblock %}
+
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <div class="footer-logo">Mahzarat Fashion Design<span>.</span></div>
+        <p>Contemporary clothing designed and finished in Bauchi, worn everywhere. Ankara at heart, tailored for now.</p>
+      </div>
+      <div>
+        <h4>Shop</h4>
+        <ul>
+          {% for cat in nav_categories %}
+            <li><a href="{% url 'store:category_detail' cat.slug %}">{{ cat.name }}</a></li>
+          {% endfor %}
+        </ul>
+      </div>
+      <div>
+        <h4>Support</h4>
+        <ul>
+          <li><a href="#">Size guide</a></li>
+          <li><a href="#">Delivery &amp; returns</a></li>
+          <li><a href="#">Track my order</a></li>
+          <li><a href="#contact">Contact us</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Studio</h4>
+        <ul>
+          <li><a href="#">Our story</a></li>
+          <li><a href="{% url 'store:admin_login' %}">Admin login</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">&copy; {% now "Y" %} Mahzarat Store. All rights reserved.</div>
+  </div>
+</footer>
+
+<div class="overlay" id="overlay"></div>
+
+<aside class="cart-drawer" id="cartDrawer">
+  <div class="cart-head">
+    <h3 class="serif">Your Bag</h3>
+    <button class="icon-btn" id="closeCart">✕</button>
+  </div>
+  <div class="cart-items" id="cartItems"></div>
+  <div class="cart-foot" id="cartFoot">
+    <div class="cart-subtotal"><span>Subtotal</span><span id="cartSubtotal">{{ currency_symbol }}0</span></div>
+    <button class="btn" id="checkoutBtn">Checkout</button>
+  </div>
+</aside>
+
+
+<div class="modal" id="quickView">
+  <div class="modal-box">
+    <button class="modal-close" id="closeModal">✕</button>
+    <img id="modalImg" src="" alt="">
+    <div class="modal-info">
+      <span class="eyebrow" id="modalCat">Category</span>
+      <h3 class="serif" id="modalName">Product name</h3>
+      <span class="price" id="modalPrice">{{ currency_symbol }}0</span>
+      <p class="desc" id="modalDesc"></p>
+      <div class="size-row" id="modalSizes"></div>
+      <button class="btn" id="modalAdd" style="width:100%;">Add to bag</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const CURRENCY = "{{ currency_symbol }}";
+
+function fmt(n){
+  n = Number(n);
+  const opts = n % 1 === 0 ? {maximumFractionDigits:0} : {minimumFractionDigits:2, maximumFractionDigits:2};
+  return CURRENCY + n.toLocaleString('en-NG', opts);
+}
+
+let cart = [];
+let wishlist = new Set();
+
+const overlay = document.getElementById('overlay');
+const cartDrawer = document.getElementById('cartDrawer');
+const cartItemsEl = document.getElementById('cartItems');
+const cartFoot = document.getElementById('cartFoot');
+const cartCount = document.getElementById('cartCount');
+const cartSubtotal = document.getElementById('cartSubtotal');
+const toast = document.getElementById('toast');
+let toastTimer;
+
+function showToast(msg){
+  toast.textContent = msg;
+  toast.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>toast.classList.remove('show'), 2400);
+}
+
+function openDrawer(){ cartDrawer.classList.add('open'); overlay.classList.add('open'); }
+function closeDrawer(){ cartDrawer.classList.remove('open'); overlay.classList.remove('open'); document.getElementById('quickView').classList.remove('open'); }
+
+document.getElementById('cartBtn').addEventListener('click', openDrawer);
+document.getElementById('closeCart').addEventListener('click', closeDrawer);
+overlay.addEventListener('click', closeDrawer);
+
+function addToCart(product, size){
+  const existing = cart.find(c => c.id === product.id && c.size === size);
+  if(existing){ existing.qty++; }
+  else { cart.push({...product, size: size || (product.sizes[0] || 'One Size'), qty: 1}); }
+  renderCart();
+  showToast(product.name + ' added to bag');
+  openDrawer();
+}
+
+function renderCart(){
+  const totalQty = cart.reduce((a,c)=>a+c.qty,0);
+  cartCount.textContent = totalQty;
+  if(cart.length === 0){
+    cartItemsEl.innerHTML = '<div class="cart-empty">Your bag is empty.<br>Time to fix that.</div>';
+    cartFoot.style.display = 'none';
+    return;
+  }
+  cartFoot.style.display = 'block';
+  cartItemsEl.innerHTML = cart.map((c,i)=>`
+    <div class="cart-item">
+      <img src="${c.image}" alt="${c.name}">
+      <div class="cart-item-info">
+        <h4>${c.name}</h4>
+        <div class="ci-meta">Size ${c.size} &middot; ${fmt(c.price)}</div>
+        <div class="qty-row">
+          <button class="qty-btn" data-i="${i}" data-act="dec">−</button>
+          <span>${c.qty}</span>
+          <button class="qty-btn" data-i="${i}" data-act="inc">+</button>
+          <button class="remove-btn" data-i="${i}" data-act="remove">Remove</button>
+        </div>
+      </div>
+    </div>`).join('');
+  const subtotal = cart.reduce((a,c)=>a+c.price*c.qty, 0);
+  cartSubtotal.textContent = fmt(subtotal);
+}
+
+cartItemsEl.addEventListener('click', e=>{
+  const btn = e.target.closest('.qty-btn, .remove-btn');
+  if(!btn) return;
+  const i = Number(btn.dataset.i);
+  if(btn.dataset.act === 'inc') cart[i].qty++;
+  if(btn.dataset.act === 'dec'){ cart[i].qty--; if(cart[i].qty <= 0) cart.splice(i,1); }
+  if(btn.dataset.act === 'remove') cart.splice(i,1);
+  renderCart();
+});
+
+document.getElementById('checkoutBtn').addEventListener('click', ()=>{
+  if(cart.length === 0) return;
+  showToast('Redirecting to secure checkout…');
+});
+
+// ===== QUICK VIEW =====
+const modal = document.getElementById('quickView');
+let modalProduct = null, modalSize = null;
+
+function openQuickView(product){
+  modalProduct = product; modalSize = (product.sizes[0] || 'One Size');
+  document.getElementById('modalImg').src = product.image;
+  document.getElementById('modalCat').textContent = product.category;
+  document.getElementById('modalName').textContent = product.name;
+  document.getElementById('modalPrice').textContent = fmt(product.price);
+  document.getElementById('modalDesc').textContent = product.description;
+  document.getElementById('modalSizes').innerHTML = (product.sizes.length ? product.sizes : ['One Size']).map((s,i)=>
+    `<button class="size-btn ${i===0?'active':''}" data-size="${s}">${s}</button>`).join('');
+  modal.classList.add('open');
+  overlay.classList.add('open');
+}
+document.getElementById('closeModal').addEventListener('click', ()=>{ modal.classList.remove('open'); overlay.classList.remove('open'); });
+document.getElementById('modalSizes').addEventListener('click', e=>{
+  const b = e.target.closest('.size-btn');
+  if(!b) return;
+  document.querySelectorAll('#modalSizes .size-btn').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');
+  modalSize = b.dataset.size;
+});
+document.getElementById('modalAdd').addEventListener('click', ()=>{
+  if(modalProduct){ addToCart(modalProduct, modalSize); modal.classList.remove('open'); }
+});
+
+// ===== WISHLIST (event delegation, works on any page with product cards) =====
+document.addEventListener('click', e=>{
+  const wbtn = e.target.closest('.wishlist-btn');
+  if(wbtn){
+    const id = Number(wbtn.dataset.id);
+    if(wishlist.has(id)){ wishlist.delete(id); wbtn.classList.remove('active'); }
+    else { wishlist.add(id); wbtn.classList.add('active'); showToast('Added to wishlist'); }
+    e.preventDefault();
+    return;
+  }
+  const qa = e.target.closest('.quick-add');
+  if(qa){
+    e.preventDefault();
+    const product = (window.PRODUCTS || []).find(p => p.id === Number(qa.dataset.id));
+    if(product) openQuickView(product);
+  }
+});
+
+// ===== MOBILE MENU =====
+document.getElementById('burgerBtn').addEventListener('click', function(){
+  const nav = document.getElementById('navLinks');
+  const isOpen = nav.style.display === 'flex';
+  nav.style.display = isOpen ? 'none' : 'flex';
+  nav.style.cssText += 'flex-direction:column;position:absolute;top:82px;left:0;right:0;background:#FAF6EF;padding:16px 28px;z-index:900;border-bottom:1px solid #DCD2C0;';
+});
+
+renderCart();
+
+</script>
+{% block extra_js %}{% endblock %}
+</body>
+
+</html>

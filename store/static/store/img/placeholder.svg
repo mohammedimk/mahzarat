@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000">
+  <rect width="800" height="1000" fill="#F1EADC"/>
+  <rect x="0" y="0" width="800" height="1000" fill="url(#g)"/>
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1F4436" stop-opacity="0.08"/>
+      <stop offset="1" stop-color="#1F4436" stop-opacity="0.18"/>
+    </linearGradient>
+  </defs>
+  <rect x="60" y="60" width="680" height="880" fill="none" stroke="#B08D57" stroke-width="1.5" stroke-dasharray="4 10"/>
+  <text x="400" y="490" font-family="Georgia, serif" font-size="40" fill="#1F4436" text-anchor="middle" font-style="italic">Botokhan</text>
+  <text x="400" y="530" font-family="Georgia, serif" font-size="40" fill="#1F4436" text-anchor="middle" font-style="italic">Store</text>
+  <text x="400" y="570" font-family="Arial, sans-serif" font-size="14" letter-spacing="3" fill="#8A7A5E" text-anchor="middle">PHOTO COMING SOON</text>
+</svg>
