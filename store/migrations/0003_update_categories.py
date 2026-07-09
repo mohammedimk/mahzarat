@@ -47,7 +47,7 @@ def reverse(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('store', '0001_initial'),  # <- CHANGED: depends on 0001_initial, not 0002
+        ('store', '0002_alter_sitesetting_hero_subtitle'),  # <- THIS LINE CHANGED
     ]
 
     operations = [
