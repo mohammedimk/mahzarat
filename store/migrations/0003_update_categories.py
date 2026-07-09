@@ -1,5 +1,4 @@
 from django.db import migrations
-from django.utils.text import slugify
 
 
 def update_categories(apps, schema_editor):
@@ -42,14 +41,13 @@ def update_categories(apps, schema_editor):
 
 
 def reverse(apps, schema_editor):
-    """Reverse is optional - we'll just pass"""
     pass
 
 
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('store', '0002_supabase_upload_paths'),  # or whatever your last migration was
+        ('store', '0001_initial'),  # <- CHANGED: depends on 0001_initial, not 0002
     ]
 
     operations = [
