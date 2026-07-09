@@ -6,21 +6,29 @@ import os
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# ======================================================================
+# >>> FIX 1 — your .env file was never actually being loaded.
+# You have python-dotenv in requirements.txt, but nothing in settings.py
+# ever called load_dotenv(), so locally os.environ.get('SECRET_KEY') was
+# only working if you'd exported it some other way. This makes .env work
+# the way it's supposed to, both locally and (harmlessly) on Render.
+# ======================================================================
+try:
+    from dotenv import load_dotenv
+    load_dotenv(BASE_DIR / '.env')
+except ImportError:
+    pass
+# ======================================================================
+
 # ----------------------------------------------------------------------
 # SECURITY
 # ----------------------------------------------------------------------
-# Replace this with your own secret key before deploying (never reuse this one).
-#SECRET_KEY = 'django-insecure-change-this-key-before-you-deploy-botokhan-store'
+SECRET_KEY = os.environ.get(
+    'SECRET_KEY',
+    'django-insecure-change-this-key-before-you-deploy-botokhan-store'
+)
 
-
-# The second argument acts as a backup for local development
-SECRET_KEY = os.environ.get('SECRET_KEY')
-
-
-# Turn this off in production.
-DEBUG = False
-
-#ALLOWED_HOSTS = ['']  # Tighten this to your real domain(s) before deploying.
+DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
 ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'mahzarat.onrender.com']
 
@@ -73,28 +81,23 @@ WSGI_APPLICATION = 'botokhan.wsgi.application'
 # ----------------------------------------------------------------------
 # DATABASE
 # ----------------------------------------------------------------------
-# SQLite by default — zero setup, perfect for development or a small store.
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
-}
+# ======================================================================
+# >>> FIX 2 (recommended, separate from the image issue) — this was still
+# hardcoded to SQLite, which lives on Render's disk. Render wipes that
+# disk on every deploy, so admin accounts and products can vanish too.
+# This reads DATABASE_URL if it's set (e.g. on Render, once you attach a
+# Postgres database) and falls back to your local SQLite file otherwise.
+# Nothing changes locally until you actually set DATABASE_URL.
+# ======================================================================
+import dj_database_url
 
-# To use MySQL instead, install `mysqlclient` (pip install mysqlclient) and
-# replace the DATABASES block above with:
-#
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.mysql',
-#         'NAME': 'botokhan_store',
-#         'USER': 'root',
-#         'PASSWORD': '',
-#         'HOST': 'localhost',
-#         'PORT': '3306',
-#         'OPTIONS': {'charset': 'utf8mb4'},
-#     }
-# }
+DATABASES = {
+    'default': dj_database_url.config(
+        default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
+        conn_max_age=600,
+    )
+}
+# ======================================================================
 
 # ----------------------------------------------------------------------
 # PASSWORD VALIDATION
@@ -115,30 +118,52 @@ USE_I18N = True
 USE_TZ = True
 
 # ----------------------------------------------------------------------
-# STATIC & MEDIA FILES
+# STATIC FILES
 # ----------------------------------------------------------------------
-#STATIC_URL = 'static/'
-#STATIC_ROOT = BASE_DIR / 'staticfiles'  # used by `collectstatic` in production
-# No STATICFILES_DIRS needed — Django's AppDirectoriesFinder automatically
-# picks up store/static/ since 'store' is in INSTALLED_APPS.
-
-
 STATIC_URL = "/static/"
-
-# The absolute path to the directory where collectstatic will collect static files for deployment
-STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles") 
-
-# Optional: Turn on WhiteNoise storage compression and caching support
-STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
-
-
-
-
-
-MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'  # uploaded product/site photos live here
+STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# ----------------------------------------------------------------------
+# MEDIA FILES — THIS IS THE ACTUAL FIX FOR YOUR UPLOADED PHOTOS
+# ----------------------------------------------------------------------
+# ======================================================================
+# >>> FIX 3 — this whole block is new. Before, MEDIA_ROOT pointed at local
+# disk unconditionally, which is why uploaded photos disappeared on Render
+# (ephemeral disk) and 404'd in production (media is never served when
+# DEBUG=False). Setting USE_SUPABASE_STORAGE=True routes every upload
+# (product photos + hero/lookbook photos) to Supabase Storage instead,
+# which serves them over a permanent public URL, independent of Render.
+# ======================================================================
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'  # only used when USE_SUPABASE_STORAGE is False
+
+USE_SUPABASE_STORAGE = os.environ.get('USE_SUPABASE_STORAGE', 'False') == 'True'
+
+if USE_SUPABASE_STORAGE:
+    SUPABASE_URL = os.environ.get('SUPABASE_URL', '')
+    SUPABASE_SERVICE_KEY = os.environ.get('SUPABASE_SERVICE_KEY', '')
+    SUPABASE_BUCKET = os.environ.get('SUPABASE_BUCKET', 'product-images')
+
+    if not SUPABASE_URL or not SUPABASE_SERVICE_KEY:
+        raise Exception(
+            'USE_SUPABASE_STORAGE is True but SUPABASE_URL / SUPABASE_SERVICE_KEY '
+            'are not set. Add them in Render -> Environment (or your local .env).'
+        )
+
+    STORAGES = {
+        'default': {'BACKEND': 'store.storage_backends.SupabaseStorage'},
+        'staticfiles': {'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage'},
+    }
+else:
+    STORAGES = {
+        'default': {'BACKEND': 'django.core.files.storage.FileSystemStorage'},
+        'staticfiles': {'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage'},
+    }
+# ======================================================================
+# <<< END FIX 3
+# ======================================================================
 
 # ----------------------------------------------------------------------
 # AUTH / ADMIN PANEL REDIRECTS

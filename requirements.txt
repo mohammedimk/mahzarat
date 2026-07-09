@@ -6,3 +6,7 @@ requests>=2.31        # talks to the Supabase Storage REST API
 python-dotenv>=1.0    # loads .env so credentials aren't hardcoded in settings.py
 gunicorn
 whitenoise>=6.7
+
+# --- ADDED: needed for the DATABASE_URL / Postgres fix in settings.py ---
+dj-database-url>=2.2
+psycopg2-binary>=2.9
