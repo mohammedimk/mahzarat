@@ -127,24 +127,29 @@ def search_view(request):
 # ADMIN PANEL
 # =====================================================================
 
+# def admin_register(request):
+#     if request.user.is_authenticated:
+#         return redirect('store:admin_dashboard')
+
+#     form = AdminRegisterForm(request.POST or None)
+#     if request.method == 'POST' and form.is_valid():
+#         user = User.objects.create_user(
+#             username=form.cleaned_data['username'],
+#             email=form.cleaned_data['email'],
+#             password=form.cleaned_data['password'],
+#             first_name=form.cleaned_data['full_name'],
+#         )
+#         user.is_staff = True
+#         user.save()
+#         messages.success(request, 'Account created! You can now log in.')
+#         return redirect('store:admin_login')
+#
+#   return render(request, 'store/admin/register.html', {'form': form})
+
 def admin_register(request):
-    if request.user.is_authenticated:
-        return redirect('store:admin_dashboard')
-
-    form = AdminRegisterForm(request.POST or None)
-    if request.method == 'POST' and form.is_valid():
-        user = User.objects.create_user(
-            username=form.cleaned_data['username'],
-            email=form.cleaned_data['email'],
-            password=form.cleaned_data['password'],
-            first_name=form.cleaned_data['full_name'],
-        )
-        user.is_staff = True
-        user.save()
-        messages.success(request, 'Account created! You can now log in.')
-        return redirect('store:admin_login')
-
-    return render(request, 'store/admin/register.html', {'form': form})
+    """Registration disabled - redirect to login"""
+    messages.info(request, 'Registration is disabled. Contact your administrator.')
+    return redirect('store:admin_login')
 
 
 def admin_login(request):
