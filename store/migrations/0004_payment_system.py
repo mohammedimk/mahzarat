@@ -1,14 +1,45 @@
 from django.db import migrations, models
-import django.db.models.deletion
-
 
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('store', '0003_update_categories'),  # or whatever your last migration is
+        # Points perfectly to your previous migration file
+        ('store', '0003_update_categories'),  
     ]
 
     operations = [
+        # 1. Automate table creation directly into Render's PostgreSQL instance on startup
+        migrations.RunSQL(
+            sql="""
+            CREATE TABLE IF NOT EXISTS store_bankaccount (
+                id SERIAL PRIMARY KEY,
+                bank_name VARCHAR(100) NOT NULL,
+                account_name VARCHAR(150) NOT NULL,
+                account_number VARCHAR(20) NOT NULL,
+                is_active BOOLEAN DEFAULT TRUE,
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+            );
+            
+            CREATE TABLE IF NOT EXISTS store_order (
+                id SERIAL PRIMARY KEY,
+                order_id VARCHAR(50) UNIQUE NOT NULL, -- Fixed character limit bug permanently
+                status VARCHAR(20) DEFAULT 'pending',
+                customer_name VARCHAR(150) NOT NULL,
+                customer_email VARCHAR(254) NOT NULL,
+                customer_phone VARCHAR(20) NOT NULL,
+                cart_items JSONB NOT NULL,
+                total_amount NUMERIC(10, 2) NOT NULL,
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                completed_at TIMESTAMP WITH TIME ZONE NULL
+            );
+            """,
+            reverse_sql="""
+            DROP TABLE IF EXISTS store_bankaccount;
+            DROP TABLE IF EXISTS store_order;
+            """
+        ),
+        
+        # 2. Fake the state to Django models registry so the App layout remains functional
         migrations.CreateModel(
             name='BankAccount',
             fields=[
@@ -21,13 +52,14 @@ class Migration(migrations.Migration):
             ],
             options={
                 'verbose_name_plural': 'Bank Accounts',
+                'managed': False, # Tells Django not to try modifying this table via standard migration pipelines
             },
         ),
         migrations.CreateModel(
             name='Order',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('order_id', models.CharField(max_length=20, unique=True)),
+                ('order_id', models.CharField(max_length=50, unique=True)),
                 ('status', models.CharField(choices=[('pending', 'Pending Payment'), ('completed', 'Completed'), ('cancelled', 'Cancelled')], default='pending', max_length=20)),
                 ('customer_name', models.CharField(max_length=150)),
                 ('customer_email', models.EmailField(max_length=254)),
@@ -39,6 +71,10 @@ class Migration(migrations.Migration):
             ],
             options={
                 'ordering': ['-created_at'],
+                'managed': False, # Tells Django not to try modifying this table via standard migration pipelines
             },
         ),
     ]
+
+
+
