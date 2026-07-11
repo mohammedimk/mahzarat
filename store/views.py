@@ -1,3 +1,5 @@
+import json
+import uuid
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
@@ -5,18 +7,12 @@ from django.contrib.auth.models import User
 from django.core.paginator import Paginator
 from django.db.models import F, Q
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_http_methods
 
 from .forms import AdminLoginForm, AdminRegisterForm, ProductForm, SiteSettingForm
-from .models import Category, Product, SiteSetting
-# >>> ADD THESE VIEWS TO store/views.py (after the search_view function) <<<
-
-import json
-import uuid
-from django.views.decorators.http import require_http_methods
-from django.utils import timezone
-
-from .models import BankAccount, Order
+from .models import Category, Product, SiteSetting, BankAccount, Order
 
 PER_PAGE = 9
 
@@ -132,8 +128,6 @@ def search_view(request):
     })
 
 
-
-
 @require_http_methods(["POST"])
 @csrf_exempt
 def checkout(request):
@@ -143,7 +137,6 @@ def checkout(request):
     Creates an Order record and redirects to payment page.
     """
     try:
-        # 1. Parse cart from POST request
         cart_json = request.POST.get('cart_json', '[]')
         cart = json.loads(cart_json)
 
@@ -151,26 +144,20 @@ def checkout(request):
             messages.error(request, 'Your cart is empty.')
             return redirect('store:index')
 
-        # 2. Extract client inputs directly from your frontend modal form
         customer_name = request.POST.get('customer_name', '').strip()
         customer_email = request.POST.get('customer_email', '').strip()
         customer_phone = request.POST.get('customer_phone', '').strip()
 
-        # 3. Simple backend validation check
         if not customer_name or not customer_email or not customer_phone:
             messages.error(request, 'Please fill in all required fields correctly.')
             return redirect('store:index')
 
-        # 4. Calculate grand total
         total_amount = sum(float(item.get('price', 0)) * int(item.get('qty', 1)) for item in cart)
 
-        # 5. Generate unique order ID (Guaranteed to be 17 characters max)
-        # Format: ORD-YYMMDD-6_CHAR_UUID -> e.g., ORD-260711-A1B2C3
-        date_str = timezone.now().strftime('%y%m%d') # %y is short year (e.g., '26')
-        uuid_str = str(uuid.uuid4())[:6].upper()      # 6 character random hash
+        date_str = timezone.now().strftime('%y%m%d') 
+        uuid_str = str(uuid.uuid4())[:6].upper()      
         order_id = f"ORD-{date_str}-{uuid_str}"
 
-        # 6. Create order entry in database using direct fields
         order = Order.objects.create(
             order_id=order_id,
             customer_name=customer_name,
@@ -180,7 +167,6 @@ def checkout(request):
             total_amount=total_amount,
         )
 
-        # Redirect to payment page cleanly
         return redirect('store:payment', order_id=order.order_id)
 
     except Exception as e:
@@ -192,11 +178,15 @@ def payment(request, order_id):
     """
     >>> PAYMENT PAGE <<<
     Display bank transfer instructions and amount to pay.
-    Shows account number, bank name, and customer details.
     """
     try:
         order = get_object_or_404(Order, order_id=order_id, status='pending')
-        bank = BankAccount.get_active()
+        
+        # Safe fallback method if get_active() fails or is missing from models
+        if hasattr(BankAccount, 'get_active'):
+            bank = BankAccount.get_active()
+        else:
+            bank = BankAccount.objects.filter(is_active=True).first()
 
         if not bank:
             messages.error(request, 'Bank details not configured. Please contact support.')
@@ -214,74 +204,40 @@ def payment(request, order_id):
 
 
 def payment_success(request, order_id):
-    """
-    >>> SUCCESS PAGE <<<
-    Displayed after customer claims to have transferred funds.
-    Shows order summary and success message.
-    """
     try:
         order = get_object_or_404(Order, order_id=order_id)
-        
         return render(request, 'store/payment_success.html', {
             'order': order,
             'currency_symbol': '₦',
         })
-
     except Exception as e:
         messages.error(request, f'Error: {str(e)}')
         return redirect('store:index')
 
 
 def order_status(request, order_id):
-    """
-    >>> ORDER STATUS PAGE <<<
-    Customer can check their order status.
-    """
     try:
         order = get_object_or_404(Order, order_id=order_id)
-        
         return render(request, 'store/order_status.html', {
             'order': order,
             'currency_symbol': '₦',
         })
-
     except Exception as e:
         messages.error(request, f'Error: {str(e)}')
         return redirect('store:index')
-
 
 
 # =====================================================================
 # ADMIN PANEL
 # =====================================================================
 
-# def admin_register(request):
-#     if request.user.is_authenticated:
-#         return redirect('store:admin_dashboard')
-
-#     form = AdminRegisterForm(request.POST or None)
-#     if request.method == 'POST' and form.is_valid():
-#         user = User.objects.create_user(
-#             username=form.cleaned_data['username'],
-#             email=form.cleaned_data['email'],
-#             password=form.cleaned_data['password'],
-#             first_name=form.cleaned_data['full_name'],
-#         )
-#         user.is_staff = True
-#         user.save()
-#         messages.success(request, 'Account created! You can now log in.')
-#         return redirect('store:admin_login')
-#
-#   return render(request, 'store/admin/register.html', {'form': form})
-
 def admin_register(request):
-    """Registration disabled - redirect to login"""
     messages.info(request, 'Registration is disabled. Contact your administrator.')
     return redirect('store:admin_login')
 
 
 def admin_login(request):
-    if request.user.is_authenticated:
+    if request.user.is_authenticated and request.user.is_staff:
         return redirect('store:admin_dashboard')
 
     form = AdminLoginForm(request.POST or None)
@@ -300,9 +256,14 @@ def admin_login(request):
 
         user = authenticate(request, username=username, password=password)
         if user is not None:
-            login(request, user)
-            return redirect('store:admin_dashboard')
-        error = 'Incorrect username/email or password.'
+            # 🚀 CORE FIX: Explicitly verify user has staff permissions to prevent 403 errors later
+            if user.is_staff:
+                login(request, user)
+                return redirect('store:admin_dashboard')
+            else:
+                error = 'Access Denied: Your account does not have staff permissions.'
+        else:
+            error = 'Incorrect username/email or password.'
 
     return render(request, 'store/admin/login.html', {'form': form, 'error': error})
 
@@ -315,6 +276,12 @@ def admin_logout(request):
 
 @login_required(login_url='store:admin_login')
 def admin_dashboard(request):
+    # 🚀 SECURITY GATEGUARD: Safeguards direct navigation bypasses
+    if not request.user.is_staff:
+        logout(request)
+        messages.error(request, 'Access Denied: Staff verification required.')
+        return redirect('store:admin_login')
+
     products = Product.objects.select_related('category').order_by('-created_at')
     paginator = Paginator(products, 12)
     page_obj = paginator.get_page(request.GET.get('page'))
@@ -335,6 +302,9 @@ def admin_dashboard(request):
 
 @login_required(login_url='store:admin_login')
 def add_product(request):
+    if not request.user.is_staff:
+        return redirect('store:admin_login')
+        
     if request.method == 'POST':
         form = ProductForm(request.POST, request.FILES, require_image=True)
         if form.is_valid():
@@ -357,6 +327,9 @@ def add_product(request):
 
 @login_required(login_url='store:admin_login')
 def edit_product(request, pk):
+    if not request.user.is_staff:
+        return redirect('store:admin_login')
+
     product = get_object_or_404(Product, pk=pk)
 
     if request.method == 'POST':
@@ -379,6 +352,9 @@ def edit_product(request, pk):
 
 @login_required(login_url='store:admin_login')
 def delete_product(request, pk):
+    if not request.user.is_staff:
+        return redirect('store:admin_login')
+
     product = get_object_or_404(Product, pk=pk)
     if request.method == 'POST':
         product.image.delete(save=False)
@@ -389,6 +365,9 @@ def delete_product(request, pk):
 
 @login_required(login_url='store:admin_login')
 def admin_settings(request):
+    if not request.user.is_staff:
+        return redirect('store:admin_login')
+
     settings_obj = SiteSetting.load()
 
     if request.method == 'POST':
