@@ -133,6 +133,7 @@ def search_view(request):
 
 
 
+
 @require_http_methods(["POST"])
 @csrf_exempt
 def checkout(request):
@@ -142,7 +143,7 @@ def checkout(request):
     Creates an Order record and redirects to payment page.
     """
     try:
-        # Parse cart from POST request
+        # 1. Parse cart from POST request
         cart_json = request.POST.get('cart_json', '[]')
         cart = json.loads(cart_json)
 
@@ -150,29 +151,33 @@ def checkout(request):
             messages.error(request, 'Your cart is empty.')
             return redirect('store:index')
 
-        # Create checkout form
-        form = CheckoutForm(request.POST)
-        if not form.is_valid():
+        # 2. Extract client inputs directly from your frontend modal form
+        customer_name = request.POST.get('customer_name', '').strip()
+        customer_email = request.POST.get('customer_email', '').strip()
+        customer_phone = request.POST.get('customer_phone', '').strip()
+
+        # 3. Simple backend validation check
+        if not customer_name or not customer_email or not customer_phone:
             messages.error(request, 'Please fill in all required fields correctly.')
             return redirect('store:index')
 
-        # Calculate total
-        total_amount = sum(float(item['price']) * item['qty'] for item in cart)
+        # 4. Calculate grand total
+        total_amount = sum(float(item.get('price', 0)) * int(item.get('qty', 1)) for item in cart)
 
-        # Generate unique order ID
+        # 5. Generate unique order ID
         order_id = f"ORD-{timezone.now().strftime('%Y%m%d')}-{str(uuid.uuid4())[:8].upper()}"
 
-        # Create order in database
+        # 6. Create order entry in database using direct fields
         order = Order.objects.create(
             order_id=order_id,
-            customer_name=form.cleaned_data['customer_name'],
-            customer_email=form.cleaned_data['customer_email'],
-            customer_phone=form.cleaned_data['customer_phone'],
+            customer_name=customer_name,
+            customer_email=customer_email,
+            customer_phone=customer_phone,
             cart_items=cart,
             total_amount=total_amount,
         )
 
-        # Redirect to payment page
+        # Redirect to payment page cleanly
         return redirect('store:payment', order_id=order.order_id)
 
     except Exception as e:
