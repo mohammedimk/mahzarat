@@ -8,6 +8,14 @@ from django.shortcuts import get_object_or_404, redirect, render
 
 from .forms import AdminLoginForm, AdminRegisterForm, ProductForm, SiteSettingForm
 from .models import Category, Product, SiteSetting
+# >>> ADD THESE VIEWS TO store/views.py (after the search_view function) <<<
+
+import json
+import uuid
+from django.views.decorators.http import require_http_methods
+from django.utils import timezone
+
+from .models import BankAccount, Order
 
 PER_PAGE = 9
 
@@ -121,6 +129,116 @@ def search_view(request):
         'page_obj': page_obj,
         'products_json': products_json,
     })
+
+
+
+@require_http_methods(["POST"])
+def checkout(request):
+    """
+    >>> CHECKOUT PAGE <<<
+    User submits cart details and personal info.
+    Creates an Order record and redirects to payment page.
+    """
+    try:
+        # Parse cart from POST request
+        cart_json = request.POST.get('cart_json', '[]')
+        cart = json.loads(cart_json)
+
+        if not cart:
+            messages.error(request, 'Your cart is empty.')
+            return redirect('store:index')
+
+        # Create checkout form
+        form = CheckoutForm(request.POST)
+        if not form.is_valid():
+            messages.error(request, 'Please fill in all required fields correctly.')
+            return redirect('store:index')
+
+        # Calculate total
+        total_amount = sum(float(item['price']) * item['qty'] for item in cart)
+
+        # Generate unique order ID
+        order_id = f"ORD-{timezone.now().strftime('%Y%m%d')}-{str(uuid.uuid4())[:8].upper()}"
+
+        # Create order in database
+        order = Order.objects.create(
+            order_id=order_id,
+            customer_name=form.cleaned_data['customer_name'],
+            customer_email=form.cleaned_data['customer_email'],
+            customer_phone=form.cleaned_data['customer_phone'],
+            cart_items=cart,
+            total_amount=total_amount,
+        )
+
+        # Redirect to payment page
+        return redirect('store:payment', order_id=order.order_id)
+
+    except Exception as e:
+        messages.error(request, f'Checkout error: {str(e)}')
+        return redirect('store:index')
+
+
+def payment(request, order_id):
+    """
+    >>> PAYMENT PAGE <<<
+    Display bank transfer instructions and amount to pay.
+    Shows account number, bank name, and customer details.
+    """
+    try:
+        order = get_object_or_404(Order, order_id=order_id, status='pending')
+        bank = BankAccount.get_active()
+
+        if not bank:
+            messages.error(request, 'Bank details not configured. Please contact support.')
+            return redirect('store:index')
+
+        return render(request, 'store/payment.html', {
+            'order': order,
+            'bank': bank,
+            'currency_symbol': '₦',
+        })
+
+    except Exception as e:
+        messages.error(request, f'Error loading payment page: {str(e)}')
+        return redirect('store:index')
+
+
+def payment_success(request, order_id):
+    """
+    >>> SUCCESS PAGE <<<
+    Displayed after customer claims to have transferred funds.
+    Shows order summary and success message.
+    """
+    try:
+        order = get_object_or_404(Order, order_id=order_id)
+        
+        return render(request, 'store/payment_success.html', {
+            'order': order,
+            'currency_symbol': '₦',
+        })
+
+    except Exception as e:
+        messages.error(request, f'Error: {str(e)}')
+        return redirect('store:index')
+
+
+def order_status(request, order_id):
+    """
+    >>> ORDER STATUS PAGE <<<
+    Customer can check their order status.
+    """
+    try:
+        order = get_object_or_404(Order, order_id=order_id)
+        
+        return render(request, 'store/order_status.html', {
+            'order': order,
+            'currency_symbol': '₦',
+        })
+
+    except Exception as e:
+        messages.error(request, f'Error: {str(e)}')
+        return redirect('store:index')
+
 
 
 # =====================================================================
