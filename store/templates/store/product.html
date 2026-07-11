@@ -47,7 +47,53 @@
           {% endif %}
         {% endwith %}
 
-        <button class="btn btn-gold" id="pdAddToCart" style="width:100%;" data-id="{{ product.id }}">Add to bag</button>
+
+        
+<input type="hidden" id="productId" value="{{ product.id }}">
+<input type="hidden" id="productName" value="{{ product.name }}">
+<input type="hidden" id="productPrice" value="{{ product.price|floatformat:0 }}">
+
+<!-- Size Selection (if product has sizes) -->
+{% if product.sizes %}
+<div style="margin: 20px 0;">
+  <h4 style="margin: 0 0 10px 0; font-weight: 600;">Select Size:</h4>
+  <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+    {% for size in product.sizes_list %}
+      <label style="display: flex; align-items: center; cursor: pointer;">
+        <input 
+          type="radio" 
+          name="size" 
+          value="{{ size }}" 
+          id="size-{{ size }}"
+          {% if forloop.first %}checked{% endif %}
+          style="margin-right: 8px;"
+        >
+        <span style="padding: 8px 12px; border: 2px solid #E5DECC; border-radius: 4px;">{{ size }}</span>
+      </label>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<!-- THE ADD TO BAG BUTTON - MUST HAVE id="addToCartBtn" -->
+<button 
+  type="button" 
+  id="addToCartBtn" 
+  class="btn btn-gold"
+  style="
+    width: 100%;
+    padding: 15px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-top: 20px;
+    cursor: pointer;
+    border: none;
+    border-radius: 4px;
+  "
+>
+  Add to bag
+</button>
+
       </div>
     </div>
 
