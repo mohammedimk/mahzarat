@@ -292,7 +292,10 @@ renderCart();
 
 # >>> AND ADD THIS NEW FUNCTION BEFORE THE closing </script> TAG <<<
 
+
 function showCheckoutModal() {
+  const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
+  
   const html = `
     <div id="checkoutModal" style="
       position: fixed; top: 0; left: 0; right: 0; bottom: 0;
@@ -307,14 +310,14 @@ function showCheckoutModal() {
         <p style="color: #666; margin-bottom: 20px;">Enter your details to proceed to payment</p>
         
         <form id="checkoutForm" method="POST" action="/checkout/">
-          <input type="hidden" name="csrfmiddlewaretoken" value="${document.querySelector('[name=csrfmiddlewaretoken]').value}">
+          <input type="hidden" name="csrfmiddlewaretoken" value="${csrfToken}">
           <input type="hidden" name="cart_json" value='${JSON.stringify(cart)}'>
           
           <div style="margin-bottom: 15px;">
             <label style="display: block; margin-bottom: 5px; font-weight: 600;">Full Name</label>
             <input type="text" name="customer_name" required style="
               width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;
-              font-family: inherit; font-size: 1rem;
+              font-family: inherit; font-size: 1rem; box-sizing: border-box;
             " placeholder="Enter your full name">
           </div>
           
@@ -322,7 +325,7 @@ function showCheckoutModal() {
             <label style="display: block; margin-bottom: 5px; font-weight: 600;">Email</label>
             <input type="email" name="customer_email" required style="
               width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;
-              font-family: inherit; font-size: 1rem;
+              font-family: inherit; font-size: 1rem; box-sizing: border-box;
             " placeholder="your@email.com">
           </div>
           
@@ -330,8 +333,8 @@ function showCheckoutModal() {
             <label style="display: block; margin-bottom: 5px; font-weight: 600;">Phone Number</label>
             <input type="tel" name="customer_phone" required style="
               width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;
-              font-family: inherit; font-size: 1rem;
-            " placeholder="+234 801 234 5678">
+              font-family: inherit; font-size: 1rem; box-sizing: border-box;
+            " placeholder="+234 8012345678">
           </div>
           
           <button type="submit" class="btn btn-gold" style="width: 100%; margin-bottom: 10px;">
@@ -346,12 +349,65 @@ function showCheckoutModal() {
   `;
   
   document.body.insertAdjacentHTML('beforeend', html);
-  
-  document.getElementById('checkoutForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    this.submit();
-  });
 }
+
+// Add to cart function
+function addToCart() {
+  const productId = document.getElementById('productId')?.value;
+  const productName = document.getElementById('productName')?.value;
+  const productPrice = parseFloat(document.getElementById('productPrice')?.value);
+  const selectedSize = document.querySelector('input[name="size"]:checked')?.value || 'One Size';
+  
+  if (!productId || !productPrice) {
+    showToast('Error: Product information not found');
+    return;
+  }
+  
+  const existingItem = cart.find(item => item.id == productId && item.size == selectedSize);
+  
+  if (existingItem) {
+    existingItem.qty += 1;
+  } else {
+    cart.push({
+      id: productId,
+      name: productName,
+      price: productPrice,
+      size: selectedSize,
+      qty: 1,
+    });
+  }
+  
+  localStorage.setItem('cart', JSON.stringify(cart));
+  updateCartDisplay();
+  showToast(productName + ' added to cart!');
+}
+
+// Update cart display
+function updateCartDisplay() {
+  const cartCount = cart.reduce((sum, item) => sum + item.qty, 0);
+  const cartTotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+  
+  const cartCountEl = document.getElementById('cartCount');
+  if (cartCountEl) {
+    cartCountEl.textContent = cartCount;
+  }
+  
+  const cartTotalEl = document.getElementById('cartTotal');
+  if (cartTotalEl) {
+    cartTotalEl.textContent = '₦' + cartTotal.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+  }
+}
+
+// Connect the "Add to bag" button
+document.addEventListener('DOMContentLoaded', () => {
+  const addBtn = document.getElementById('addToCartBtn');
+  if (addBtn) {
+    addBtn.addEventListener('click', addToCart);
+  }
+  updateCartDisplay();
+});
+
+
 
 
 
