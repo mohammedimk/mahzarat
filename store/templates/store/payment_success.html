@@ -1,0 +1,353 @@
+{% extends 'store/base.html' %}
+{% load store_extras %}
+
+{% block title %}Payment Confirmed | Botokhan Store{% endblock %}
+
+{% block content %}
+<div class="section" style="padding-top: 150px; padding-bottom: 100px;">
+  <div class="container">
+    <div class="success-container">
+      
+      <!-- Success Icon -->
+      <div class="success-icon">
+        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="50" cy="50" r="45" fill="#4CAF50" opacity="0.1"/>
+          <circle cx="50" cy="50" r="45" fill="none" stroke="#4CAF50" stroke-width="2"/>
+          <path d="M 30 50 L 45 65 L 70 35" fill="none" stroke="#4CAF50" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+
+      <!-- Success Message -->
+      <h1 class="serif" style="text-align: center; margin-bottom: 10px; color: #1F4436;">
+        Payment Confirmed! ✓
+      </h1>
+      <p style="text-align: center; font-size: 1.1rem; color: #666; margin-bottom: 40px;">
+        Thank you for your payment. Your order has been received.
+      </p>
+
+      <!-- Order Details Card -->
+      <div class="success-card">
+        <div class="card-section">
+          <h3 class="serif" style="border-bottom: 2px solid #B08D57; padding-bottom: 15px; margin-bottom: 20px;">
+            Order Details
+          </h3>
+          
+          <div class="detail-row">
+            <span class="label">Order ID:</span>
+            <span class="value copy-able" data-copy="{{ order.order_id }}">{{ order.order_id }} <span style="font-size: 0.8rem; cursor: pointer;">📋</span></span>
+          </div>
+          
+          <div class="detail-row">
+            <span class="label">Customer Name:</span>
+            <span class="value">{{ order.customer_name }}</span>
+          </div>
+          
+          <div class="detail-row">
+            <span class="label">Email:</span>
+            <span class="value"><a href="mailto:{{ order.customer_email }}">{{ order.customer_email }}</a></span>
+          </div>
+          
+          <div class="detail-row">
+            <span class="label">Phone:</span>
+            <span class="value">{{ order.customer_phone }}</span>
+          </div>
+
+          <div class="detail-row">
+            <span class="label">Status:</span>
+            <span class="value status-pending">🟡 {{ order.get_status_display }}</span>
+          </div>
+        </div>
+
+        <!-- Items Summary -->
+        <div class="card-section">
+          <h3 class="serif" style="border-bottom: 2px solid #B08D57; padding-bottom: 15px; margin-bottom: 20px;">
+            Items Ordered
+          </h3>
+          
+          {% for item in order.cart_items %}
+            <div class="item-summary">
+              <div class="item-name">
+                <strong>{{ item.name }}</strong>
+                {% if item.size %}<span class="item-meta">Size: {{ item.size }}</span>{% endif %}
+              </div>
+              <div class="item-qty">Qty: {{ item.qty }}</div>
+              <div class="item-price">{{ item.price|currency }}</div>
+            </div>
+          {% endfor %}
+        </div>
+
+        <!-- Total Amount -->
+        <div class="amount-box">
+          <div class="amount-label">Total Amount Transferred:</div>
+          <div class="amount-value">{{ order.total_amount|currency }}</div>
+        </div>
+
+        <!-- Next Steps -->
+        <div class="next-steps">
+          <h4>What Happens Next?</h4>
+          <ol>
+            <li><strong>Verification:</strong> We'll verify your payment within 24 hours</li>
+            <li><strong>Confirmation:</strong> You'll receive an email confirmation once payment is verified</li>
+            <li><strong>Packing:</strong> Your order will be packed and prepared for delivery</li>
+            <li><strong>Shipment:</strong> You'll get tracking details via email</li>
+          </ol>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="action-buttons">
+        <a href="{% url 'store:index' %}" class="btn btn-gold">Continue Shopping</a>
+        <a href="{% url 'store:order_status' order.order_id %}" class="btn btn-outline">Check Order Status</a>
+      </div>
+
+      <!-- Support Message -->
+      <div class="support-message">
+        <p>📧 A confirmation email has been sent to <strong>{{ order.customer_email }}</strong></p>
+        <p>If you don't receive it within 10 minutes, check your spam folder or contact us:</p>
+        <p>
+          <a href="mailto:support@botokhan.com">support@botokhan.com</a> | 
+          <a href="tel:+2348012345678">+234 801 234 5678</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.success-container {
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+.success-icon {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.success-icon svg {
+  width: 100px;
+  height: 100px;
+}
+
+.success-card {
+  background: white;
+  border: 2px solid #E5DECC;
+  border-radius: 12px;
+  padding: 40px;
+  margin-bottom: 30px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+}
+
+.card-section {
+  margin-bottom: 35px;
+}
+
+.card-section:last-of-type {
+  margin-bottom: 0;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 15px 0;
+  border-bottom: 1px solid #F5F1EB;
+  align-items: center;
+}
+
+.detail-row:last-child {
+  border-bottom: none;
+}
+
+.detail-row .label {
+  font-weight: 600;
+  color: #666;
+  font-size: 0.95rem;
+}
+
+.detail-row .value {
+  color: #333;
+  font-size: 1rem;
+  text-align: right;
+}
+
+.detail-row a {
+  color: #B08D57;
+  text-decoration: none;
+}
+
+.detail-row a:hover {
+  text-decoration: underline;
+}
+
+.status-pending {
+  background: #FFF3CD;
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #856404;
+}
+
+.copy-able {
+  cursor: pointer;
+  user-select: all;
+}
+
+.item-summary {
+  background: #FAF6EF;
+  padding: 15px;
+  border-radius: 6px;
+  margin-bottom: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.item-name {
+  flex: 1;
+}
+
+.item-meta {
+  display: block;
+  font-size: 0.85rem;
+  color: #999;
+  font-weight: normal;
+  margin-top: 3px;
+}
+
+.item-qty, .item-price {
+  font-size: 0.95rem;
+  color: #666;
+  margin-left: 20px;
+}
+
+.item-price {
+  font-weight: 600;
+  color: #B08D57;
+  min-width: 100px;
+  text-align: right;
+}
+
+.amount-box {
+  background: linear-gradient(135deg, #1F4436 0%, #2d5a4f 100%);
+  color: white;
+  padding: 30px;
+  border-radius: 8px;
+  text-align: center;
+  margin: 30px 0;
+}
+
+.amount-label {
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  opacity: 0.9;
+  margin-bottom: 10px;
+}
+
+.amount-value {
+  font-size: 2.5rem;
+  font-weight: bold;
+  color: #B08D57;
+}
+
+.next-steps {
+  background: #F5F1EB;
+  padding: 25px;
+  border-radius: 8px;
+  margin-bottom: 30px;
+}
+
+.next-steps h4 {
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #555;
+  margin-bottom: 15px;
+}
+
+.next-steps ol {
+  margin-left: 0;
+  padding-left: 20px;
+}
+
+.next-steps li {
+  margin-bottom: 12px;
+  color: #555;
+  line-height: 1.6;
+  font-size: 0.95rem;
+}
+
+.next-steps strong {
+  color: #1F4436;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 30px;
+  flex-wrap: wrap;
+}
+
+.action-buttons a {
+  flex: 1;
+  min-width: 200px;
+  text-align: center;
+}
+
+.support-message {
+  background: #FFF9F3;
+  border-left: 4px solid #B08D57;
+  padding: 20px;
+  border-radius: 6px;
+  text-align: center;
+  font-size: 0.95rem;
+  color: #666;
+}
+
+.support-message p {
+  margin: 10px 0;
+}
+
+.support-message a {
+  color: #B08D57;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.support-message a:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 600px) {
+  .success-card {
+    padding: 25px;
+  }
+
+  .amount-value {
+    font-size: 2rem;
+  }
+
+  .action-buttons {
+    flex-direction: column;
+  }
+
+  .action-buttons a {
+    min-width: auto;
+  }
+}
+</style>
+
+<script>
+document.querySelectorAll('.copy-able').forEach(elem => {
+  elem.addEventListener('click', function() {
+    const text = this.textContent.trim();
+    navigator.clipboard.writeText(text).then(() => {
+      const orig = this.innerHTML;
+      this.innerHTML = '✓ Copied!';
+      setTimeout(() => { this.innerHTML = orig; }, 1500);
+    });
+  });
+});
+</script>
+{% endblock %}

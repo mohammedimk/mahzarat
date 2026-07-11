@@ -1,0 +1,317 @@
+{% extends 'store/base.html' %}
+{% load store_extras %}
+
+{% block title %}Payment | Botokhan Store{% endblock %}
+
+{% block content %}
+<div class="section" style="padding-top: 150px;">
+  <div class="container">
+    <div class="payment-wrapper">
+      
+      <!-- LEFT: Order Summary -->
+      <div class="payment-summary">
+        <h2 class="serif">Order Summary</h2>
+        <div class="order-id">Order ID: <strong>{{ order.order_id }}</strong></div>
+        
+        <div class="order-items">
+          <h4>Items</h4>
+          {% for item in order.cart_items %}
+            <div class="item-row">
+              <span>{{ item.name }} × {{ item.qty }}</span>
+              <span>{{ item.price|currency }}</span>
+            </div>
+          {% endfor %}
+        </div>
+
+        <div class="order-total">
+          <h3>Total Amount Due</h3>
+          <div class="total-amount" style="font-size: 2.5rem; font-weight: bold; color: #B08D57;">
+            {{ order.total_amount|currency }}
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: Payment Instructions -->
+      <div class="payment-instructions">
+        <h2 class="serif">Make Transfer</h2>
+        
+        <div class="instruction-box">
+          <p>Please transfer the exact amount shown above to the account below:</p>
+        </div>
+
+        <!-- Bank Details Card -->
+        <div class="bank-details-card">
+          <div class="bank-detail-row">
+            <span class="label">Bank Name:</span>
+            <span class="value">{{ bank.bank_name }}</span>
+          </div>
+          <div class="bank-detail-row">
+            <span class="label">Account Name:</span>
+            <span class="value">{{ bank.account_name }}</span>
+          </div>
+          <div class="bank-detail-row">
+            <span class="label">Account Number:</span>
+            <span class="value copy-btn" data-copy="{{ bank.account_number }}" style="cursor: pointer; font-weight: bold; color: #B08D57;">
+              {{ bank.account_number }} 
+              <span style="font-size: 0.8rem;">(click to copy)</span>
+            </span>
+          </div>
+          <div class="bank-detail-row">
+            <span class="label">Amount:</span>
+            <span class="value">{{ order.total_amount|currency }}</span>
+          </div>
+        </div>
+
+        <!-- Instructions -->
+        <div class="instruction-steps">
+          <h4>Steps to complete payment:</h4>
+          <ol>
+            <li>Copy the account number above (or write it down)</li>
+            <li>Go to your bank app or visit a bank branch</li>
+            <li>Transfer <strong>{{ order.total_amount|currency }}</strong> to the account above</li>
+            <li>Use your email or order ID (<strong>{{ order.order_id }}</strong>) as the transfer reference</li>
+            <li>After successful transfer, click "Payment Confirmed" button below</li>
+          </ol>
+        </div>
+
+        <!-- Confirmation Form -->
+        <form method="post" action="{% url 'store:payment_success' order.order_id %}">
+          {% csrf_token %}
+          <div class="confirm-section">
+            <label>
+              <input type="checkbox" name="confirm_transfer" required>
+              I have transferred <strong>{{ order.total_amount|currency }}</strong> from my bank account
+            </label>
+            <button type="submit" class="btn btn-gold" style="width: 100%;">
+              Payment Confirmed — Complete Order
+            </button>
+          </div>
+        </form>
+
+        <!-- Contact Support -->
+        <div class="support-section">
+          <p><strong>Having issues?</strong></p>
+          <p>Contact us at: <a href="mailto:support@botokhan.com">support@botokhan.com</a></p>
+          <p>Or call: <a href="tel:+2348012345678">+234 801 234 5678</a></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.payment-wrapper {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+  margin-top: 30px;
+}
+
+.payment-summary {
+  background: #FAF6EF;
+  padding: 30px;
+  border-radius: 8px;
+  border-left: 4px solid #B08D57;
+}
+
+.order-id {
+  font-size: 0.9rem;
+  color: #666;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #DCD2C0;
+}
+
+.order-items {
+  margin-bottom: 30px;
+}
+
+.order-items h4 {
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #555;
+  margin-bottom: 12px;
+}
+
+.item-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid #E5DECC;
+  font-size: 0.95rem;
+}
+
+.item-row:last-child {
+  border-bottom: none;
+}
+
+.order-total {
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 2px solid #B08D57;
+}
+
+.order-total h3 {
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  color: #666;
+  margin-bottom: 15px;
+  letter-spacing: 0.5px;
+}
+
+.total-amount {
+  color: #B08D57;
+}
+
+.payment-instructions {
+  background: white;
+  padding: 30px;
+  border-radius: 8px;
+  border: 2px solid #E5DECC;
+}
+
+.payment-instructions h2 {
+  margin-bottom: 25px;
+}
+
+.instruction-box {
+  background: #FFF9F3;
+  padding: 15px;
+  border-left: 3px solid #B08D57;
+  margin-bottom: 25px;
+  border-radius: 4px;
+}
+
+.instruction-box p {
+  margin: 0;
+  color: #333;
+  font-size: 0.95rem;
+}
+
+.bank-details-card {
+  background: #F5F1EB;
+  padding: 25px;
+  border-radius: 8px;
+  margin-bottom: 30px;
+  border: 1px solid #E5DECC;
+}
+
+.bank-detail-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 15px 0;
+  border-bottom: 1px solid #DCD2C0;
+  align-items: center;
+}
+
+.bank-detail-row:last-child {
+  border-bottom: none;
+}
+
+.bank-detail-row .label {
+  font-weight: 600;
+  color: #555;
+  font-size: 0.95rem;
+}
+
+.bank-detail-row .value {
+  color: #333;
+  font-size: 1.05rem;
+  text-align: right;
+}
+
+.instruction-steps {
+  margin-bottom: 30px;
+}
+
+.instruction-steps h4 {
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #555;
+  margin-bottom: 15px;
+}
+
+.instruction-steps ol {
+  margin-left: 0;
+  padding-left: 20px;
+}
+
+.instruction-steps li {
+  margin-bottom: 12px;
+  color: #555;
+  line-height: 1.6;
+  font-size: 0.95rem;
+}
+
+.confirm-section {
+  background: #FFF9F3;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 25px;
+}
+
+.confirm-section label {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  color: #333;
+}
+
+.confirm-section input[type="checkbox"] {
+  margin-right: 12px;
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+.support-section {
+  background: #F5F1EB;
+  padding: 20px;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  color: #666;
+}
+
+.support-section p {
+  margin: 10px 0;
+}
+
+.support-section a {
+  color: #B08D57;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.support-section a:hover {
+  text-decoration: underline;
+}
+
+.copy-btn:hover {
+  opacity: 0.8;
+}
+
+@media (max-width: 768px) {
+  .payment-wrapper {
+    grid-template-columns: 1fr;
+    gap: 30px;
+  }
+}
+</style>
+
+<script>
+document.querySelectorAll('.copy-btn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    const text = this.dataset.copy;
+    navigator.clipboard.writeText(text).then(() => {
+      const orig = this.innerHTML;
+      this.innerHTML = '✓ Copied!';
+      setTimeout(() => { this.innerHTML = orig; }, 2000);
+    });
+  });
+});
+</script>
+{% endblock %}
