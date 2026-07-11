@@ -19,6 +19,8 @@ def update_categories(apps, schema_editor):
         ('Textiles', 'textiles'),
         ('Shedda', 'shedda'),
         ('Gatzner', 'gatzner'),
+        ('Video Editing', 'video editing'),
+        ('Crypto', 'crypto'),
     ]
     
     for name, slug in new_categories:
