@@ -208,10 +208,44 @@ cartItemsEl.addEventListener('click', e=>{
   renderCart();
 });
 
+
+    
+
+# >>> AND REPLACE IT WITH THIS <<<
+
 document.getElementById('checkoutBtn').addEventListener('click', ()=>{
-  if(cart.length === 0) return;
-  showToast('Redirecting to secure checkout…');
+  if(cart.length === 0) {
+    showToast('Your cart is empty');
+    return;
+  }
+  
+  // Create a hidden form and submit to the checkout view
+  const form = document.createElement('form');
+  form.method = 'POST';
+  form.action = '{% url "store:checkout" %}';
+  
+  // Add CSRF token
+  const csrfInput = document.createElement('input');
+  csrfInput.type = 'hidden';
+  csrfInput.name = 'csrfmiddlewaretoken';
+  csrfInput.value = document.querySelector('[name=csrfmiddlewaretoken]').value;
+  form.appendChild(csrfInput);
+  
+  // Add cart as JSON
+  const cartInput = document.createElement('input');
+  cartInput.type = 'hidden';
+  cartInput.name = 'cart_json';
+  cartInput.value = JSON.stringify(cart);
+  form.appendChild(cartInput);
+  
+  // Open checkout form in a modal instead
+  showCheckoutModal();
 });
+
+
+
+
+    
 
 // ===== QUICK VIEW =====
 const modal = document.getElementById('quickView');
@@ -268,6 +302,72 @@ document.getElementById('burgerBtn').addEventListener('click', function(){
 });
 
 renderCart();
+
+
+# >>> AND ADD THIS NEW FUNCTION BEFORE THE closing </script> TAG <<<
+
+function showCheckoutModal() {
+  const html = `
+    <div id="checkoutModal" style="
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.5); z-index: 1000;
+      display: flex; align-items: center; justify-content: center;
+    ">
+      <div style="
+        background: white; border-radius: 8px; padding: 30px;
+        max-width: 400px; width: 90%;
+      ">
+        <h2 class="serif">Checkout</h2>
+        <p style="color: #666; margin-bottom: 20px;">Enter your details to proceed to payment</p>
+        
+        <form id="checkoutForm" method="POST" action="/checkout/">
+          <input type="hidden" name="csrfmiddlewaretoken" value="${document.querySelector('[name=csrfmiddlewaretoken]').value}">
+          <input type="hidden" name="cart_json" value='${JSON.stringify(cart)}'>
+          
+          <div style="margin-bottom: 15px;">
+            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Full Name</label>
+            <input type="text" name="customer_name" required style="
+              width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;
+              font-family: inherit; font-size: 1rem;
+            " placeholder="Enter your full name">
+          </div>
+          
+          <div style="margin-bottom: 15px;">
+            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Email</label>
+            <input type="email" name="customer_email" required style="
+              width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;
+              font-family: inherit; font-size: 1rem;
+            " placeholder="your@email.com">
+          </div>
+          
+          <div style="margin-bottom: 20px;">
+            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Phone Number</label>
+            <input type="tel" name="customer_phone" required style="
+              width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;
+              font-family: inherit; font-size: 1rem;
+            " placeholder="+234 801 234 5678">
+          </div>
+          
+          <button type="submit" class="btn btn-gold" style="width: 100%; margin-bottom: 10px;">
+            Proceed to Payment
+          </button>
+          <button type="button" class="btn btn-outline" style="width: 100%;" onclick="this.closest('#checkoutModal').remove();">
+            Cancel
+          </button>
+        </form>
+      </div>
+    </div>
+  `;
+  
+  document.body.insertAdjacentHTML('beforeend', html);
+  
+  document.getElementById('checkoutForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    this.submit();
+  });
+}
+
+
 
 </script>
 {% block extra_js %}{% endblock %}
