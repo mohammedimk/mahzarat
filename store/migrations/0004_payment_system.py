@@ -3,12 +3,11 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        # Points perfectly to your previous migration file
         ('store', '0003_update_categories'),  
     ]
 
     operations = [
-        # 1. Automate table creation directly into Render's PostgreSQL instance on startup
+        # 1. Automatically inject structural tables directly into Render's PostgreSQL database
         migrations.RunSQL(
             sql="""
             CREATE TABLE IF NOT EXISTS store_bankaccount (
@@ -22,7 +21,7 @@ class Migration(migrations.Migration):
             
             CREATE TABLE IF NOT EXISTS store_order (
                 id SERIAL PRIMARY KEY,
-                order_id VARCHAR(50) UNIQUE NOT NULL, -- Fixed character limit bug permanently
+                order_id VARCHAR(50) UNIQUE NOT NULL,
                 status VARCHAR(20) DEFAULT 'pending',
                 customer_name VARCHAR(150) NOT NULL,
                 customer_email VARCHAR(254) NOT NULL,
@@ -39,7 +38,7 @@ class Migration(migrations.Migration):
             """
         ),
         
-        # 2. Fake the state to Django models registry so the App layout remains functional
+        # 2. Map structural components to your Django Model Registry
         migrations.CreateModel(
             name='BankAccount',
             fields=[
@@ -52,7 +51,7 @@ class Migration(migrations.Migration):
             ],
             options={
                 'verbose_name_plural': 'Bank Accounts',
-                'managed': False, # Tells Django not to try modifying this table via standard migration pipelines
+                'managed': False, 
             },
         ),
         migrations.CreateModel(
@@ -71,10 +70,7 @@ class Migration(migrations.Migration):
             ],
             options={
                 'ordering': ['-created_at'],
-                'managed': False, # Tells Django not to try modifying this table via standard migration pipelines
+                'managed': False, 
             },
         ),
     ]
-
-
-
