@@ -164,8 +164,11 @@ def checkout(request):
         # 4. Calculate grand total
         total_amount = sum(float(item.get('price', 0)) * int(item.get('qty', 1)) for item in cart)
 
-        # 5. Generate unique order ID
-        order_id = f"ORD-{timezone.now().strftime('%Y%m%d')}-{str(uuid.uuid4())[:8].upper()}"
+        # 5. Generate unique order ID (Guaranteed to be 17 characters max)
+        # Format: ORD-YYMMDD-6_CHAR_UUID -> e.g., ORD-260711-A1B2C3
+        date_str = timezone.now().strftime('%y%m%d') # %y is short year (e.g., '26')
+        uuid_str = str(uuid.uuid4())[:6].upper()      # 6 character random hash
+        order_id = f"ORD-{date_str}-{uuid_str}"
 
         # 6. Create order entry in database using direct fields
         order = Order.objects.create(
