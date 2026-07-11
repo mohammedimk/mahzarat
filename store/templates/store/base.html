@@ -127,6 +127,7 @@
 
 <div class="toast" id="toast"></div>
 
+
 <script>
 const CURRENCY = "{{ currency_symbol }}";
 
@@ -136,7 +137,8 @@ function fmt(n){
   return CURRENCY + n.toLocaleString('en-NG', opts);
 }
 
-let cart = [];
+// Initialize cart from localStorage OR empty array safely (ONLY ONCE)
+let cart = JSON.parse(localStorage.getItem('cart')) || [];
 let wishlist = new Set();
 
 const overlay = document.getElementById('overlay');
@@ -166,55 +168,58 @@ function addToCart(product, size){
   const existing = cart.find(c => c.id === product.id && c.size === size);
   if(existing){ existing.qty++; }
   else { cart.push({...product, size: size || (product.sizes[0] || 'One Size'), qty: 1}); }
+  
+  localStorage.setItem('cart', JSON.stringify(cart));
   renderCart();
-  showToast(product.name + ' added to bag');
+  showToast((product.name || 'Item') + ' added to bag');
   openDrawer();
 }
 
 function renderCart(){
   const totalQty = cart.reduce((a,c)=>a+c.qty,0);
-  cartCount.textContent = totalQty;
+  if(cartCount) cartCount.textContent = totalQty;
+  
   if(cart.length === 0){
-    cartItemsEl.innerHTML = '<div class="cart-empty">Your bag is empty.<br>Time to fix that.</div>';
-    cartFoot.style.display = 'none';
+    if(cartItemsEl) cartItemsEl.innerHTML = '<div class="cart-empty">Your bag is empty.<br>Time to fix that.</div>';
+    if(cartFoot) cartFoot.style.display = 'none';
     return;
   }
-  cartFoot.style.display = 'block';
-  cartItemsEl.innerHTML = cart.map((c,i)=>`
-    <div class="cart-item">
-      <img src="${c.image}" alt="${c.name}">
-      <div class="cart-item-info">
-        <h4>${c.name}</h4>
-        <div class="ci-meta">Size ${c.size} &middot; ${fmt(c.price)}</div>
-        <div class="qty-row">
-          <button class="qty-btn" data-i="${i}" data-act="dec">−</button>
-          <span>${c.qty}</span>
-          <button class="qty-btn" data-i="${i}" data-act="inc">+</button>
-          <button class="remove-btn" data-i="${i}" data-act="remove">Remove</button>
+  
+  if(cartFoot) cartFoot.style.display = 'block';
+  if(cartItemsEl) {
+    cartItemsEl.innerHTML = cart.map((c,i)=>`
+      <div class="cart-item">
+        <img src="${c.image || ''}" alt="${c.name || ''}">
+        <div class="cart-item-info">
+          <h4>${c.name || 'Product'}</h4>
+          <div class="ci-meta">Size ${c.size || 'M'} &middot; ${fmt(c.price || 0)}</div>
+          <div class="qty-row">
+            <button class="qty-btn" data-i="${i}" data-act="dec">−</button>
+            <span>${c.qty}</span>
+            <button class="qty-btn" data-i="${i}" data-act="inc">+</button>
+            <button class="remove-btn" data-i="${i}" data-act="remove">Remove</button>
+          </div>
         </div>
-      </div>
-    </div>`).join('');
-  const subtotal = cart.reduce((a,c)=>a+c.price*c.qty, 0);
-  cartSubtotal.textContent = fmt(subtotal);
+      </div>`).join('');
+  }
+  const subtotal = cart.reduce((a,c)=>a+(c.price || 0)*c.qty, 0);
+  if(cartSubtotal) cartSubtotal.textContent = fmt(subtotal);
 }
 
-cartItemsEl.addEventListener('click', e=>{
-  const btn = e.target.closest('.qty-btn, .remove-btn');
-  if(!btn) return;
-  const i = Number(btn.dataset.i);
-  if(btn.dataset.act === 'inc') cart[i].qty++;
-  if(btn.dataset.act === 'dec'){ cart[i].qty--; if(cart[i].qty <= 0) cart.splice(i,1); }
-  if(btn.dataset.act === 'remove') cart.splice(i,1);
-  renderCart();
-});
+if(cartItemsEl) {
+  cartItemsEl.addEventListener('click', e=>{
+    const btn = e.target.closest('.qty-btn, .remove-btn');
+    if(!btn) return;
+    const i = Number(btn.dataset.i);
+    if(btn.dataset.act === 'inc') cart[i].qty++;
+    if(btn.dataset.act === 'dec'){ cart[i].qty--; if(cart[i].qty <= 0) cart.splice(i,1); }
+    if(btn.dataset.act === 'remove') cart.splice(i,1);
+    localStorage.setItem('cart', JSON.stringify(cart));
+    renderCart();
+  });
+}
 
-
-    
-
-// Initialize cart from localStorage
-let cart = JSON.parse(localStorage.getItem('cart')) || [];
-
-// ONLY show checkout modal when checkout button is clicked
+// Listen to Checkout process safely
 document.addEventListener('DOMContentLoaded', () => {
   const checkoutBtn = document.getElementById('checkoutBtn');
   if (checkoutBtn) {
@@ -226,29 +231,26 @@ document.addEventListener('DOMContentLoaded', () => {
       showCheckoutModal();
     });
   }
+  renderCart();
 });
-
-
-
-
-    
 
 // ===== QUICK VIEW =====
 const modal = document.getElementById('quickView');
 let modalProduct = null, modalSize = null;
 
 function openQuickView(product){
-  modalProduct = product; modalSize = (product.sizes[0] || 'One Size');
+  modalProduct = product; modalSize = (product.sizes?.[0] || 'One Size');
   document.getElementById('modalImg').src = product.image;
   document.getElementById('modalCat').textContent = product.category;
   document.getElementById('modalName').textContent = product.name;
   document.getElementById('modalPrice').textContent = fmt(product.price);
   document.getElementById('modalDesc').textContent = product.description;
-  document.getElementById('modalSizes').innerHTML = (product.sizes.length ? product.sizes : ['One Size']).map((s,i)=>
+  document.getElementById('modalSizes').innerHTML = ((product.sizes && product.sizes.length) ? product.sizes : ['One Size']).map((s,i)=>
     `<button class="size-btn ${i===0?'active':''}" data-size="${s}">${s}</button>`).join('');
   modal.classList.add('open');
   overlay.classList.add('open');
 }
+
 document.getElementById('closeModal').addEventListener('click', ()=>{ modal.classList.remove('open'); overlay.classList.remove('open'); });
 document.getElementById('modalSizes').addEventListener('click', e=>{
   const b = e.target.closest('.size-btn');
@@ -261,7 +263,7 @@ document.getElementById('modalAdd').addEventListener('click', ()=>{
   if(modalProduct){ addToCart(modalProduct, modalSize); modal.classList.remove('open'); }
 });
 
-// ===== WISHLIST (event delegation, works on any page with product cards) =====
+// ===== WISHLIST =====
 document.addEventListener('click', e=>{
   const wbtn = e.target.closest('.wishlist-btn');
   if(wbtn){
@@ -287,12 +289,7 @@ document.getElementById('burgerBtn').addEventListener('click', function(){
   nav.style.cssText += 'flex-direction:column;position:absolute;top:82px;left:0;right:0;background:#FAF6EF;padding:16px 28px;z-index:900;border-bottom:1px solid #DCD2C0;';
 });
 
-renderCart();
-
-
-# >>> AND ADD THIS NEW FUNCTION BEFORE THE closing </script> TAG <<<
-
-
+// ===== CHECKOUT MODAL GENERATOR =====
 function showCheckoutModal() {
   const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
   
@@ -350,68 +347,9 @@ function showCheckoutModal() {
   
   document.body.insertAdjacentHTML('beforeend', html);
 }
-
-// Add to cart function
-function addToCart() {
-  const productId = document.getElementById('productId')?.value;
-  const productName = document.getElementById('productName')?.value;
-  const productPrice = parseFloat(document.getElementById('productPrice')?.value);
-  const selectedSize = document.querySelector('input[name="size"]:checked')?.value || 'One Size';
-  
-  if (!productId || !productPrice) {
-    showToast('Error: Product information not found');
-    return;
-  }
-  
-  const existingItem = cart.find(item => item.id == productId && item.size == selectedSize);
-  
-  if (existingItem) {
-    existingItem.qty += 1;
-  } else {
-    cart.push({
-      id: productId,
-      name: productName,
-      price: productPrice,
-      size: selectedSize,
-      qty: 1,
-    });
-  }
-  
-  localStorage.setItem('cart', JSON.stringify(cart));
-  updateCartDisplay();
-  showToast(productName + ' added to cart!');
-}
-
-// Update cart display
-function updateCartDisplay() {
-  const cartCount = cart.reduce((sum, item) => sum + item.qty, 0);
-  const cartTotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
-  
-  const cartCountEl = document.getElementById('cartCount');
-  if (cartCountEl) {
-    cartCountEl.textContent = cartCount;
-  }
-  
-  const cartTotalEl = document.getElementById('cartTotal');
-  if (cartTotalEl) {
-    cartTotalEl.textContent = '₦' + cartTotal.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-  }
-}
-
-// Connect the "Add to bag" button
-document.addEventListener('DOMContentLoaded', () => {
-  const addBtn = document.getElementById('addToCartBtn');
-  if (addBtn) {
-    addBtn.addEventListener('click', addToCart);
-  }
-  updateCartDisplay();
-});
-
-
-
-
-
 </script>
+
+
 {% block extra_js %}{% endblock %}
 </body>
 
