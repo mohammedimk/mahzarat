@@ -26,6 +26,8 @@ class Product(models.Model):
         ('Best seller', 'Best seller'),
         ('Trending', 'Trending'),
         ('Sale', 'Sale'),
+        ('Crypto', 'Crypto'),             
+        ('Video Editing', 'Video Editing'),
     ]
 
     name = models.CharField(max_length=180)
