@@ -106,3 +106,79 @@ class SiteSetting(models.Model):
     def load(cls):
         obj, _ = cls.objects.get_or_create(pk=1)
         return obj
+
+# >>> ADD THIS TO store/models.py AT THE END <<<
+
+from django.db import models
+from django.utils import timezone
+
+
+class BankAccount(models.Model):
+    """
+    Store bank transfer details (account number, bank name, account holder).
+    Only one active bank account at a time (for simplicity).
+    Admin sets this up once in Django admin.
+    """
+    bank_name = models.CharField(max_length=100)
+    account_name = models.CharField(max_length=150)
+    account_number = models.CharField(max_length=20)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name_plural = 'Bank Accounts'
+
+    def __str__(self):
+        return f'{self.bank_name} - {self.account_name} ({self.account_number})'
+
+    @classmethod
+    def get_active(cls):
+        """Get the currently active bank account"""
+        return cls.objects.filter(is_active=True).first()
+
+
+class Order(models.Model):
+    """
+    Customer order - tracks what they're buying and how much they need to pay.
+    Status: pending (waiting for payment) → completed (paid) → cancelled
+    """
+    STATUS_CHOICES = [
+        ('pending', 'Pending Payment'),
+        ('completed', 'Completed'),
+        ('cancelled', 'Cancelled'),
+    ]
+
+    # Order tracking
+    order_id = models.CharField(max_length=20, unique=True)  # e.g., "ORD-20260709-001"
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+
+    # Customer info
+    customer_name = models.CharField(max_length=150)
+    customer_email = models.EmailField()
+    customer_phone = models.CharField(max_length=20)
+
+    # Cart details (stored as JSON since it's variable)
+    cart_items = models.JSONField()  # list of {id, name, price, size, qty}
+    total_amount = models.DecimalField(max_digits=10, decimal_places=2)
+
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f'{self.order_id} - {self.customer_name} ({self.status})'
+
+    def mark_completed(self):
+        """Mark this order as successfully paid"""
+        self.status = 'completed'
+        self.completed_at = timezone.now()
+        self.save()
+
+    def cancel(self):
+        """Cancel this order"""
+        self.status = 'cancelled'
+        self.save()
+
