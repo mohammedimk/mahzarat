@@ -211,35 +211,21 @@ cartItemsEl.addEventListener('click', e=>{
 
     
 
-# >>> AND REPLACE IT WITH THIS <<<
+// Initialize cart from localStorage
+let cart = JSON.parse(localStorage.getItem('cart')) || [];
 
-document.getElementById('checkoutBtn').addEventListener('click', ()=>{
-  if(cart.length === 0) {
-    showToast('Your cart is empty');
-    return;
+// ONLY show checkout modal when checkout button is clicked
+document.addEventListener('DOMContentLoaded', () => {
+  const checkoutBtn = document.getElementById('checkoutBtn');
+  if (checkoutBtn) {
+    checkoutBtn.addEventListener('click', () => {
+      if(cart.length === 0) {
+        showToast('Your cart is empty');
+        return;
+      }
+      showCheckoutModal();
+    });
   }
-  
-  // Create a hidden form and submit to the checkout view
-  const form = document.createElement('form');
-  form.method = 'POST';
-  form.action = '{% url "store:checkout" %}';
-  
-  // Add CSRF token
-  const csrfInput = document.createElement('input');
-  csrfInput.type = 'hidden';
-  csrfInput.name = 'csrfmiddlewaretoken';
-  csrfInput.value = document.querySelector('[name=csrfmiddlewaretoken]').value;
-  form.appendChild(csrfInput);
-  
-  // Add cart as JSON
-  const cartInput = document.createElement('input');
-  cartInput.type = 'hidden';
-  cartInput.name = 'cart_json';
-  cartInput.value = JSON.stringify(cart);
-  form.appendChild(cartInput);
-  
-  // Open checkout form in a modal instead
-  showCheckoutModal();
 });
 
 
