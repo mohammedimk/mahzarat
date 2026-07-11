@@ -124,3 +124,31 @@ class SiteSettingForm(forms.ModelForm):
 
     def clean_lookbook_image_2(self):
         return self._clean_optional_image('lookbook_image_2')
+
+
+# >>> ADD THIS TO store/forms.py AT THE END <<<
+
+class CheckoutForm(forms.Form):
+    """Customer details form for checkout"""
+    customer_name = forms.CharField(
+        max_length=150,
+        label='Full name',
+        widget=forms.TextInput(attrs={'placeholder': 'Enter your full name'})
+    )
+    customer_email = forms.EmailField(
+        label='Email address',
+        widget=forms.EmailInput(attrs={'placeholder': 'your@email.com'})
+    )
+    customer_phone = forms.CharField(
+        max_length=20,
+        label='Phone number',
+        widget=forms.TextInput(attrs={'placeholder': '+234 8012345678'})
+    )
+
+    def clean_customer_phone(self):
+        phone = self.cleaned_data.get('customer_phone')
+        # Simple phone validation - just check it has digits
+        if not any(c.isdigit() for c in phone):
+            raise forms.ValidationError('Phone number must contain digits.')
+        return phone
+
