@@ -149,7 +149,7 @@ class Order(models.Model):
     ]
 
     # Order tracking
-    order_id = models.CharField(max_length=20, unique=True)  # e.g., "ORD-20260709-001"
+    order_id = models.CharField(max_length=50, unique=True)  
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
 
     # Customer info
