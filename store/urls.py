@@ -20,4 +20,11 @@ urlpatterns = [
     path('admin-panel/products/<int:pk>/edit/', views.edit_product, name='edit_product'),
     path('admin-panel/products/<int:pk>/delete/', views.delete_product, name='delete_product'),
     path('admin-panel/settings/', views.admin_settings, name='admin_settings'),
+
+    # --- Checkout & Payment Flow ---
+    path('checkout/', views.checkout, name='checkout'),
+    path('payment/<str:order_id>/', views.payment, name='payment'),
+    path('payment/<str:order_id>/success/', views.payment_success, name='payment_success'),
+    path('order/<str:order_id>/status/', views.order_status, name='order_status'),
+
 ]
