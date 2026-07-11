@@ -347,23 +347,37 @@ if(document.getElementById('burgerBtn')) {
 }
 
 // ===== CHECKOUT MODAL GENERATOR =====
+// ===== CHECKOUT MODAL GENERATOR =====
 function showCheckoutModal() {
   const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
   
   const html = `
     <div id="checkoutModal" style="
-      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.5); z-index: 1000;
-      display: flex; align-items: center; justify-content: center;
+      position: fixed; 
+      top: 0; 
+      left: 0; 
+      right: 0; 
+      bottom: 0;
+      background: rgba(0,0,0,0.6); 
+      z-index: 99999; 
+      display: flex; 
+      align-items: center; 
+      justify-content: center;
     ">
       <div style="
-        background: white; border-radius: 8px; padding: 30px;
-        max-width: 400px; width: 90%;
+        background: white; 
+        border-radius: 8px; 
+        padding: 30px;
+        max-width: 400px; 
+        width: 90%;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+        position: relative;
+        z-index: 100000;
       ">
-        <h2 class="serif">Checkout</h2>
+        <h2 class="serif" style="margin-top: 0;">Checkout</h2>
         <p style="color: #666; margin-bottom: 20px;">Enter your details to proceed to payment</p>
         
-        <form id="checkoutForm" method="POST" action="/checkout/">
+        <form id="checkoutModalForm" method="POST" action="/checkout/">
           <input type="hidden" name="csrfmiddlewaretoken" value="${csrfToken}">
           <input type="hidden" name="cart_json" value='${JSON.stringify(cart)}'>
           
@@ -391,10 +405,10 @@ function showCheckoutModal() {
             " placeholder="+234 8012345678">
           </div>
           
-          <button type="submit" class="btn btn-gold" style="width: 100%; margin-bottom: 10px;">
+          <button type="submit" class="btn btn-gold" style="width: 100%; margin-bottom: 10px; padding: 12px; cursor: pointer;">
             Proceed to Payment
           </button>
-          <button type="button" class="btn btn-outline" style="width: 100%;" onclick="this.closest('#checkoutModal').remove();">
+          <button type="button" class="btn btn-outline" style="width: 100%; padding: 12px; cursor: pointer;" onclick="this.closest('#checkoutModal').remove();">
             Cancel
           </button>
         </form>
@@ -403,7 +417,20 @@ function showCheckoutModal() {
   `;
   
   document.body.insertAdjacentHTML('beforeend', html);
+
+  // Safely grab the newly inserted form element by its specific id string
+  const formElement = document.getElementById('checkoutModalForm');
+  if (formElement) {
+    formElement.addEventListener('submit', function(e) {
+      // Clear localStorage cart so the user doesn't double-order if they navigate back
+      localStorage.removeItem('cart');
+      // Submit form cleanly to Django backend
+      return true;
+    });
+  }
 }
+
+
 </script>
 {% block extra_js %}{% endblock %}
 </body>
