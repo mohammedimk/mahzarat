@@ -58,6 +58,63 @@ class AdminRegisterForm(forms.Form):
             self.add_error('confirm_password', 'Passwords do not match.')
         return cleaned
 
+    # 🚀 THE CRITICAL FIX: Adding a clean, explicit save method
+    def save(self, commit=True):
+        """
+        Manually handles building and hashing the User instance 
+        since this is a plain form and not a ModelForm.
+        """
+        # Create an unsaved user instance using form clean details
+        user = User(
+            username=self.cleaned_data['username'],
+            email=self.cleaned_data['email']
+        )
+        
+        # Split full_name into first and last names if provided
+        name_parts = self.cleaned_data['full_name'].strip().split(' ', 1)
+        user.first_name = name_parts[0]
+        if len(name_parts) > 1:
+            user.last_name = name_parts[1]
+            
+        # Crucial step: Securely hashes plain text into a DB-safe hash string
+        user.set_password(self.cleaned_data['password'])
+        
+        if commit:
+            user.save()
+            
+        return user
+
+# class AdminRegisterForm(forms.Form):
+#     full_name = forms.CharField(max_length=100, label='Full name')
+#     username = forms.CharField(max_length=30, label='Username')
+#     email = forms.EmailField(label='Email address')
+#     password = forms.CharField(widget=forms.PasswordInput, label='Password')
+#     confirm_password = forms.CharField(widget=forms.PasswordInput, label='Confirm password')
+
+#     def clean_username(self):
+#         username = self.cleaned_data['username'].strip()
+#         if not username.replace('_', '').isalnum():
+#             raise forms.ValidationError('Username may only contain letters, numbers and underscores.')
+#         if User.objects.filter(username__iexact=username).exists():
+#             raise forms.ValidationError('That username is already taken.')
+#         return username
+
+#     def clean_email(self):
+#         email = self.cleaned_data['email'].strip().lower()
+#         if User.objects.filter(email__iexact=email).exists():
+#             raise forms.ValidationError('An account with that email already exists.')
+#         return email
+
+#     def clean(self):
+#         cleaned = super().clean()
+#         password = cleaned.get('password')
+#         confirm = cleaned.get('confirm_password')
+#         if password and len(password) < 6:
+#             self.add_error('password', 'Password must be at least 6 characters.')
+#         if password and confirm and password != confirm:
+#             self.add_error('confirm_password', 'Passwords do not match.')
+#         return cleaned
+
 
 class AdminLoginForm(forms.Form):
     username = forms.CharField(label='Username or email')
