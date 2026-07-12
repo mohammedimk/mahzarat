@@ -490,15 +490,40 @@ def delete_bank_account(request):
     return redirect('store:admin_dashboard')
     
 
+from django.shortcuts import render, redirect, get_object_or_4 Python
+from django.contrib.auth.decorators import login_required
+from django.core.paginator import Paginator
+from django.contrib import messages
+from .models import Order
 
 @login_required(login_url='store:admin_login')
 def admin_orders(request):
-    """Custom view layout to track customer order data without accessing native admin backends"""
+    """Custom view layout to track customer order data and process fast checkbox updates"""
     if not request.user.is_staff:
         return redirect('store:admin_login')
+    
+    # 🚀 NEW: Intercept checkbox verification state updates safely
+    if request.method == 'POST' and 'update_status_id' in request.POST:
+        order_id_attr = request.POST.get('update_status_id')
+        try:
+            # Look up order explicitly via unique order identity parameter
+            order = Order.objects.get(order_id=order_id_attr)
+            if order.status == 'pending':
+                order.mark_completed() # Safely handles updating status to 'completed' & adding timestamp
+                messages.success(request, f"Order {order.order_id} marked as successful!")
+            else:
+                messages.info(request, f"Order {order.order_id} is already updated.")
+        except Order.DoesNotExist:
+            messages.error(request, "Failed to update: Order records could not be found.")
+        
+        # Redirect back directly to keep query pagination parameters intact 
+        return redirect(f"{request.path}?{request.META.get('QUERY_STRING', '')}")
         
     orders_qs = Order.objects.all().order_by('-created_at')
     paginator = Paginator(orders_qs, 15)
     page_obj = paginator.get_page(request.GET.get('page'))
     
     return render(request, 'store/admin/orders_list.html', {'page_obj': page_obj})
+
+
+
