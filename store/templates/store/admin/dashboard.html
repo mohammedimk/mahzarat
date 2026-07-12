@@ -10,14 +10,16 @@
 <div class="card" style="margin-bottom: 25px; border-left: 4px solid #b08d57; padding: 15px;">
   <h3 style="margin-top: 0; margin-bottom: 10px; font-size: 1.1rem; color: #1f4436;">⚙️ Core System Configurations</h3>
   <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+    <a href="{% url 'admin:store_bankaccount_changelist' %}" class="btn btn-outline btn-sm">
+  🏦 Configure Bank Details (Backend)
+</a>
+
+<a href="{% url 'admin:store_order_changelist' %}" class="btn btn-outline btn-sm">
+  📦 View Processing Orders (Backend)
+</a>
+
+
     
-    <a href="{% url 'admin:store_bankaccount_changelist' %}" target="_blank" class="btn btn-outline btn-sm" style="display: inline-flex; align-items: center; gap: 8px;">
-      🏦 Configure Bank Details (Backend)
-    </a>
-    
-    <a href="{% url 'admin:store_order_changelist' %}" target="_blank" class="btn btn-outline btn-sm" style="display: inline-flex; align-items: center; gap: 8px;">
-      📦 View Processing Orders (Backend)
-    </a>
     
   </div>
 </div>
