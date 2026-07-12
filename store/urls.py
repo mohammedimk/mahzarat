@@ -28,6 +28,8 @@ urlpatterns = [
     path('order/<str:order_id>/status/', views.order_status, name='order_status'),
     path('admin-panel/bank/', views.manage_bank_account, name='manage_bank_account'),
     path('admin-panel/orders/', views.admin_orders, name='admin_orders'),
-    path('admin-panel/bank/delete/', views.delete_bank_account, name='delete_bank_account')
+    path('admin-panel/bank/delete/', views.delete_bank_account, name='delete_bank_account'),
+    # Add this line right below your other admin/order routes
+    path('admin-panel/orders/update-shipping/', views.admin_update_shipping, name='admin_update_shipping'),
 
 ]
