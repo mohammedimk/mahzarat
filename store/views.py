@@ -474,6 +474,24 @@ def manage_bank_account(request):
 
 
 @login_required(login_url='store:admin_login')
+def delete_bank_account(request):
+    """Safely delete the configured bank details from the system"""
+    if not request.user.is_staff:
+        return redirect('store:admin_login')
+        
+    if request.method == 'POST':
+        bank = BankAccount.objects.first()
+        if bank:
+            bank.delete()
+            messages.success(request, 'Bank credentials deleted successfully.')
+        else:
+            messages.error(request, 'No bank details found to delete.')
+            
+    return redirect('store:admin_dashboard')
+    
+
+
+@login_required(login_url='store:admin_login')
 def admin_orders(request):
     """Custom view layout to track customer order data without accessing native admin backends"""
     if not request.user.is_staff:
