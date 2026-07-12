@@ -1,0 +1,101 @@
+{% extends 'store/admin/base_admin.html' %}
+{% load static %}
+{% load store_extras %}
+
+{% block admin_title %}Processing Orders{% endblock %}
+{% block admin_heading %}Processing Orders{% endblock %}
+
+{% block admin_content %}
+<div class="card">
+    <div class="card-head" style="margin-bottom: 20px;">
+        <h2>📦 Customer Purchase Orders</h2>
+        <span class="badge badge-featured" style="background-color: #1f4436; color: #fff; padding: 6px 12px;">
+            Total: {{ page_obj.paginator.count|default:0 }}
+        </span>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Order ID</th>
+                <th>Customer Details</th>
+                <th>Items Ordered</th>
+                <th>Total Amount</th>
+                <th>Status</th>
+                <th>Date Placed</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if not page_obj.object_list %}
+                <tr class="empty-row">
+                    <td colspan="6" style="text-align: center; padding: 30px; color: #666;">
+                        No processing orders found in the system yet.
+                    </td>
+                </tr>
+            {% endif %}
+            
+            {% for order in page_obj %}
+                <tr>
+                    <td style="font-family: monospace; font-weight: bold; color: #b08d57;">
+                        {{ order.order_id }}
+                    </td>
+                    <td>
+                        <strong style="color: #1f4436;">{{ order.customer_name }}</strong><br>
+                        <span style="font-size: 0.85rem; color: #555;">✉️ {{ order.customer_email }}</span><br>
+                        <span style="font-size: 0.85rem; color: #555;">📞 {{ order.customer_phone }}</span>
+                    </td>
+                    <td>
+                        <div style="max-height: 100px; overflow-y: auto; font-size: 0.9rem; line-height: 1.4;">
+                            {% if order.cart_items %}
+                                <ul style="margin: 0; padding-left: 15px; color: #333;">
+                                    {% for item in order.cart_items %}
+                                        <li>
+                                            {{ item.name|truncatechars:25 }} 
+                                            <span style="color: #666; font-size: 0.8rem;">
+                                                (Qty: {{ item.qty|default:1 }} | Size: {{ item.selectedSize|default:'N/A' }})
+                                            </span>
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            {% else %}
+                                <span style="color: #999; font-style: italic;">No items captured</span>
+                            {% endif %}
+                        </div>
+                    </td>
+                    <td style="font-weight: bold; color: #1f4436;">
+                        {# Uses currency filter or falls back gracefully to a hardcoded symbol #}
+                        {% if order.total_amount %}
+                            ₦{{ order.total_amount|floatformat:2 }}
+                        {% else %}
+                            ₦0.00
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span class="badge badge-{{ order.status|default:'pending' }}" style="padding: 4px 8px; font-size: 0.8rem; border-radius: 4px; font-weight: bold;">
+                            {{ order.get_status_display|default:order.status|upper }}
+                        </span>
+                    </td>
+                    <td style="font-size: 0.85rem; color: #666;">
+                        {{ order.created_at|date:"M j, Y g:i A"|default:"Recently" }}
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    {% include 'store/pagination.html' %}
+</div>
+
+{# Inline styles to guarantee status color compatibility mapping dynamically #}
+<style>
+    .badge-pending { background-color: #fef3c7; color: #d97706; }
+    .badge-processing { background-color: #dbeafe; color: #2563eb; }
+    .badge-completed { background-color: #d1fae5; color: #059669; }
+    .badge-cancelled { background-color: #fee2e2; color: #dc2626; }
+    
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th { text-align: left; background-color: #f8f9fa; padding: 12px; font-size: 0.9rem; color: #444; border-bottom: 2px solid #eee; }
+    td { padding: 12px; border-bottom: 1px solid #eee; vertical-align: top; }
+    tr:hover { background-color: #fafafa; }
+</style>
+{% endblock %}
