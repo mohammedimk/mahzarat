@@ -16,12 +16,14 @@
 
     <div class="nav-links" id="navLinks">
       <a href="{% url 'store:index' %}" class="{% if active_nav == 'home' %}active{% endif %}">Home</a>
-    <a href="{% url 'store:category_detail' 'crypto' %}" class="{% if active_category_slug == 'crypto' %}active{% endif %}">Crypto</a>
-      <a href="{% url 'store:category_detail' 'video-editing' %}" class="{% if active_category_slug == 'video-editing' %}active{% endif %}">Video Editing</a>
-
+    
       {% for cat in nav_categories %}
         <a href="{% url 'store:category_detail' cat.slug %}" class="{% if active_category_slug == cat.slug %}active{% endif %}">{{ cat.name }}</a>
       {% endfor %}
+
+    <a href="{% url 'store:category_detail' 'crypto' %}" class="{% if active_category_slug == 'crypto' %}active{% endif %}">Crypto</a>
+      <a href="{% url 'store:category_detail' 'video-editing' %}" class="{% if active_category_slug == 'video-editing' %}active{% endif %}">Video Editing</a>
+
     </div>
 
     <div class="nav-actions">
