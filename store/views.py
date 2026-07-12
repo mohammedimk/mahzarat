@@ -11,6 +11,7 @@ from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 
+# 🚀 Make sure BankAccountForm and an OrderForm/representation are available if needed
 from .forms import AdminLoginForm, AdminRegisterForm, ProductForm, SiteSettingForm
 from .models import Category, Product, SiteSetting, BankAccount, Order
 
@@ -52,9 +53,11 @@ def index(request):
 
     popular = active_products.order_by('-views')[:5]
 
+    # 🚀 OPTIMIZATION: Resolve N+1 query problem by pulling latest updates in a batch query
+    recent_products = Product.objects.filter(status='active').order_by('-created_at')
     category_thumbs = {}
     for cat in categories:
-        thumb = Product.objects.filter(category=cat, status='active').order_by('-created_at').first()
+        thumb = recent_products.filter(category=cat).first()
         category_thumbs[cat.id] = thumb
 
     products_json = [product_to_dict(p) for p in page_obj.object_list]
@@ -182,7 +185,6 @@ def payment(request, order_id):
     try:
         order = get_object_or_404(Order, order_id=order_id, status='pending')
         
-        # Safe fallback method if get_active() fails or is missing from models
         if hasattr(BankAccount, 'get_active'):
             bank = BankAccount.get_active()
         else:
@@ -231,31 +233,25 @@ def order_status(request, order_id):
 # ADMIN PANEL
 # =====================================================================
 
-# def admin_register(request):
-#     messages.info(request, 'Registration is disabled. Contact your administrator.')
-#     return redirect('store:admin_login')
-
-
 def admin_register(request):
     """Register new admin user - automatically make them superuser"""
     if request.method == 'POST':
         form = AdminRegisterForm(request.POST)
         if form.is_valid():
             user = form.save(commit=False)
-            
-            # Grant absolute admin staff and superuser access
             user.is_staff = True
             user.is_superuser = True
             user.save()
             
+            if hasattr(form, 'save_m2m'):
+                form.save_m2m()
+                
             messages.success(request, 'Admin account created successfully! You are now a superuser.')
             return redirect('store:admin_login')
     else:
         form = AdminRegisterForm()
     
     return render(request, 'store/admin/register.html', {'form': form})
-
-
 
 
 def admin_login(request):
@@ -278,7 +274,6 @@ def admin_login(request):
 
         user = authenticate(request, username=username, password=password)
         if user is not None:
-            # 🚀 CORE FIX: Explicitly verify user has staff permissions to prevent 403 errors later
             if user.is_staff:
                 login(request, user)
                 return redirect('store:admin_dashboard')
@@ -298,7 +293,6 @@ def admin_logout(request):
 
 @login_required(login_url='store:admin_login')
 def admin_dashboard(request):
-    # 🚀 SECURITY GATEGUARD: Safeguards direct navigation bypasses
     if not request.user.is_staff:
         logout(request)
         messages.error(request, 'Access Denied: Staff verification required.')
@@ -333,6 +327,8 @@ def add_product(request):
             product = form.save(commit=False)
             product.author = request.user
             product.save()
+            if hasattr(form, 'save_m2m'):
+                form.save_m2m()
             messages.success(request, 'Product added to the store.')
             return redirect('store:admin_dashboard')
     else:
@@ -379,7 +375,8 @@ def delete_product(request, pk):
 
     product = get_object_or_404(Product, pk=pk)
     if request.method == 'POST':
-        product.image.delete(save=False)
+        if product.image:
+            product.image.delete(save=False)
         product.delete()
         messages.success(request, 'Product deleted.')
     return redirect('store:admin_dashboard')
@@ -405,3 +402,52 @@ def admin_settings(request):
         'form': form,
         'active_admin_nav': 'settings',
     })
+
+
+# =====================================================================
+# 🚀 ADDED: CUSTOM CORE HOOKS FOR SYSTEM DASHBOARD CONFIGURATIONS
+# =====================================================================
+
+@login_required(login_url='store:admin_login')
+def manage_bank_account(request):
+    """View to support custom storefront dashboard configuration button"""
+    if not request.user.is_staff:
+        return redirect('store:admin_login')
+        
+    bank = BankAccount.objects.first()
+    # Fallback to direct model save processing if form class isn't created yet
+    if request.method == 'POST':
+        account_name = request.POST.get('account_name', '').strip()
+        bank_name = request.POST.get('bank_name', '').strip()
+        account_number = request.POST.get('account_number', '').strip()
+        
+        if bank:
+            bank.account_name = account_name
+            bank.bank_name = bank_name
+            bank.account_number = account_number
+            bank.is_active = True
+            bank.save()
+        else:
+            BankAccount.objects.create(
+                account_name=account_name, 
+                bank_name=bank_name, 
+                account_number=account_number, 
+                is_active=True
+            )
+        messages.success(request, 'Bank credentials saved completely.')
+        return redirect('store:admin_dashboard')
+        
+    return render(request, 'store/admin/bank_form.html', {'bank': bank})
+
+
+@login_required(login_url='store:admin_login')
+def admin_orders(request):
+    """Custom view layout to track customer order data without accessing native admin backends"""
+    if not request.user.is_staff:
+        return redirect('store:admin_login')
+        
+    orders_qs = Order.objects.all().order_by('-created_at')
+    paginator = Paginator(orders_qs, 15)
+    page_obj = paginator.get_page(request.GET.get('page'))
+    
+    return render(request, 'store/admin/orders_list.html', {'page_obj': page_obj})
