@@ -21,7 +21,7 @@
                 <th>Customer Details</th>
                 <th>Items Ordered</th>
                 <th>Total Amount</th>
-                <th>Status</th>
+                <th>Status / Confirmation</th>
                 <th>Date Placed</th>
             </tr>
         </thead>
@@ -45,6 +45,9 @@
                         <span style="font-size: 0.85rem; color: #555;">📞 {{ order.customer_phone }}</span>
                     </td>
                     <td>
+                        <div style="margin-bottom: 6px; font-weight: bold; font-size: 0.85rem; color: #1f4436;">
+                            🔢 Items Count: {{ order.cart_items|length|default:0 }}
+                        </div>
                         <div style="max-height: 100px; overflow-y: auto; font-size: 0.9rem; line-height: 1.4;">
                             {% if order.cart_items %}
                                 <ul style="margin: 0; padding-left: 15px; color: #333;">
@@ -63,7 +66,6 @@
                         </div>
                     </td>
                     <td style="font-weight: bold; color: #1f4436;">
-                        {# Uses currency filter or falls back gracefully to a hardcoded symbol #}
                         {% if order.total_amount %}
                             ₦{{ order.total_amount|floatformat:2 }}
                         {% else %}
@@ -71,9 +73,29 @@
                         {% endif %}
                     </td>
                     <td>
-                        <span class="badge badge-{{ order.status|default:'pending' }}" style="padding: 4px 8px; font-size: 0.8rem; border-radius: 4px; font-weight: bold;">
-                            {{ order.get_status_display|default:order.status|upper }}
-                        </span>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            {% if order.status == 'pending' %}
+                                <form method="POST" action="" style="margin: 0; display: flex; align-items: center;">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="update_status_id" value="{{ order.order_id }}">
+                                    <input type="checkbox" 
+                                           style="width: 18px; height: 18px; cursor: pointer; accent-color: #059669;" 
+                                           onchange="if(confirm('Mark order {{ order.order_id }} as successful?')) { this.form.submit(); } else { this.checked = false; }">
+                                </form>
+                                <span class="badge badge-pending" style="padding: 4px 8px; font-size: 0.8rem; border-radius: 4px; font-weight: bold;">
+                                    PENDING
+                                </span>
+                            {% elif order.status == 'completed' %}
+                                <input type="checkbox" checked disabled style="width: 18px; height: 18px; accent-color: #059669; opacity: 0.7;">
+                                <span class="badge badge-completed" style="padding: 4px 8px; font-size: 0.8rem; border-radius: 4px; font-weight: bold;">
+                                    SUCCESSFUL
+                                </span>
+                            {% else %}
+                                <span class="badge badge-{{ order.status }}" style="padding: 4px 8px; font-size: 0.8rem; border-radius: 4px; font-weight: bold;">
+                                    {{ order.status|upper }}
+                                </span>
+                            {% endif %}
+                        </div>
                     </td>
                     <td style="font-size: 0.85rem; color: #666;">
                         {{ order.created_at|date:"M j, Y g:i A"|default:"Recently" }}
@@ -86,7 +108,7 @@
     {% include 'store/pagination.html' %}
 </div>
 
-{# Inline styles to guarantee status color compatibility mapping dynamically #}
+{# Inline styles for dynamic badge support formatting #}
 <style>
     .badge-pending { background-color: #fef3c7; color: #d97706; }
     .badge-processing { background-color: #dbeafe; color: #2563eb; }
