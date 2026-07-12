@@ -1,0 +1,29 @@
+{% extends 'store/admin/base.html' %}
+
+{% block admin_content %}
+<div class="card" style="max-width: 600px; margin: 20px auto; padding: 20px;">
+    <h2>🏦 Configure Bank Details</h2>
+    <hr>
+    
+    <form method="POST" action="">
+        {% csrf_token %}
+        
+        <div style="margin-bottom: 15px;">
+            <label style="display:block; margin-bottom:5px;">Bank Name:</label>
+            <input type="text" name="bank_name" value="{{ bank.bank_name|default:'' }}" style="width:100%; padding:8px;" required>
+        </div>
+
+        <div style="margin-bottom: 15px;">
+            <label style="display:block; margin-bottom:5px;">Account Name:</label>
+            <input type="text" name="account_name" value="{{ bank.account_name|default:'' }}" style="width:100%; padding:8px;" required>
+        </div>
+
+        <div style="margin-bottom: 15px;">
+            <label style="display:block; margin-bottom:5px;">Account Number:</label>
+            <input type="text" name="account_number" value="{{ bank.account_number|default:'' }}" style="width:100%; padding:8px;" required>
+        </div>
+
+        <button type="submit" class="btn btn-gold">Save Bank Details</button>
+    </form>
+</div>
+{% endblock %}
