@@ -26,5 +26,7 @@ urlpatterns = [
     path('payment/<str:order_id>/', views.payment, name='payment'),
     path('payment/<str:order_id>/success/', views.payment_success, name='payment_success'),
     path('order/<str:order_id>/status/', views.order_status, name='order_status'),
+    path('admin-panel/bank/', views.manage_bank_account, name='manage_bank_account'),
+    path('admin-panel/orders/', views.admin_orders, name='admin_orders'),
 
 ]
