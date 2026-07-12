@@ -32,22 +32,75 @@
   </div>
 </header>
 
-<!-- Text-Only App Download Banner -->
-<div class="bg-gradient-to-r from-green-600 to-emerald-700 text-white px-4 py-2 shadow-sm">
-  <div class="max-w-7xl mx-auto flex items-center justify-between gap-4 text-xs sm:text-sm">
+<div class="slim-app-banner">
+  <style>
+    .slim-app-banner {
+      background: linear-gradient(135deg, #16a34a, #047857);
+      color: #ffffff;
+      padding: 8px 16px;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    .slim-banner-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .slim-banner-text {
+      font-size: 13px;
+      font-weight: 500;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .slim-download-btn {
+      background-color: #ffffff;
+      color: #065f46;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 12px;
+      padding: 5px 14px;
+      border-radius: 4px;
+      transition: background-color 0.2s ease, transform 0.1s ease;
+      white-space: nowrap;
+      flex-shrink: 0;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    }
+
+    .slim-download-btn:hover {
+      background-color: #f0fdf4;
+    }
     
-    <!-- Left: Message -->
-    <span class="font-medium truncate">Get the official Android App for a seamless experience.</span>
-    
-    <!-- Right: Button -->
+    .slim-download-btn:active {
+      transform: scale(0.98);
+    }
+
+    @media (max-width: 480px) {
+      .slim-banner-text {
+        font-size: 11.5px;
+      }
+      .slim-banner-container {
+        gap: 8px;
+      }
+    }
+  </style>
+
+  <div class="slim-banner-container">
+    <span class="slim-banner-text">Get our official Android App for a seamless experience.</span>
     <a href="https://freewebsitetoapp.cloudserverbox.com/app-data/free-apps/3107128115583/PHvShkAa/app-debug.apk" 
-       download
-       class="bg-white text-emerald-800 hover:bg-emerald-50 px-3 py-1 rounded font-semibold transition shrink-0 shadow-sm">
+       download="app-debug.apk" 
+       class="slim-download-btn">
       Download App
     </a>
-
   </div>
 </div>
+
 
 
 <section class="rail-section">
