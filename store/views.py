@@ -414,29 +414,41 @@ def manage_bank_account(request):
     if not request.user.is_staff:
         return redirect('store:admin_login')
         
+    # Get the existing record if it exists
     bank = BankAccount.objects.first()
-    # Fallback to direct model save processing if form class isn't created yet
+    
     if request.method == 'POST':
         account_name = request.POST.get('account_name', '').strip()
         bank_name = request.POST.get('bank_name', '').strip()
         account_number = request.POST.get('account_number', '').strip()
         
-        if bank:
-            bank.account_name = account_name
-            bank.bank_name = bank_name
-            bank.account_number = account_number
-            bank.is_active = True
-            bank.save()
-        else:
-            BankAccount.objects.create(
-                account_name=account_name, 
-                bank_name=bank_name, 
-                account_number=account_number, 
-                is_active=True
-            )
-        messages.success(request, 'Bank credentials saved completely.')
-        return redirect('store:admin_dashboard')
+        if not account_name or not bank_name or not account_number:
+            messages.error(request, 'All fields are required.')
+            return render(request, 'store/admin/bank_form.html', {'bank': bank})
         
+        try:
+            if bank:
+                # Update existing record
+                bank.account_name = account_name
+                bank.bank_name = bank_name
+                bank.account_number = account_number
+                bank.is_active = True
+                bank.save()
+            else:
+                # 🚀 THE CRITICAL FIX: Capture the newly created object back into the 'bank' variable
+                bank = BankAccount.objects.create(
+                    account_name=account_name, 
+                    bank_name=bank_name, 
+                    account_number=account_number, 
+                    is_active=True
+                )
+            
+            messages.success(request, 'Bank credentials saved completely.')
+            return redirect('store:admin_dashboard')
+            
+        except Exception as e:
+            messages.error(request, f"Database Error: {str(e)}")
+            
     return render(request, 'store/admin/bank_form.html', {'bank': bank})
 
 
