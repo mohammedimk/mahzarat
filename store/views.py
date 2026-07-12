@@ -520,5 +520,28 @@ def admin_orders(request):
     
     return render(request, 'store/admin/orders_list.html', {'page_obj': page_obj})
 
+@login_required(login_url='store:admin_login')
+def admin_update_shipping(request):
+    """Handles the transition from 'completed' to 'delivered' status."""
+    if not request.user.is_staff:
+        return redirect('store:admin_login')
+        
+    if request.method == 'POST' and 'shipping_status_id' in request.POST:
+        order_id_attr = request.POST.get('shipping_status_id')
+        try:
+            order = Order.objects.get(order_id=order_id_attr)
+            # Only allow shifting to delivered if it has already been payment-confirmed
+            if order.status == 'completed':
+                order.status = 'delivered'  # Make sure 'delivered' is accepted by your model's choices
+                order.save()
+                messages.success(request, f"Order {order.order_id} marked as Delivered!")
+            else:
+                messages.warning(request, f"Order must be successful/paid before marking as delivered.")
+        except Order.DoesNotExist:
+            messages.error(request, "Failed to update: Order records could not be found.")
+            
+    # Redirect back matching original query string to maintain pagination
+    return redirect(f"{request.META.get('HTTP_REFERER', 'store:admin_orders')}")
+
 
 
