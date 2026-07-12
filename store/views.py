@@ -233,25 +233,42 @@ def order_status(request, order_id):
 # ADMIN PANEL
 # =====================================================================
 
+
 def admin_register(request):
-    """Register new admin user - automatically make them superuser"""
-    if request.method == 'POST':
-        form = AdminRegisterForm(request.POST)
-        if form.is_valid():
-            user = form.save(commit=False)
-            user.is_staff = True
-            user.is_superuser = True
-            user.save()
+    """
+    🔒 DISABLING REGISTRATION:
+    Intercepts all requests, alerts the user that registration is closed,
+    and safely redirects them away to avoid account inflation risks.
+    """
+    messages.info(request, 'Registration is currently disabled. Please contact the system administrator to provision a new account.')
+    return redirect('store:admin_login')
+
+
+
+
+
+
+# def admin_register(request):
+#     """Register new admin user - automatically make them superuser"""
+#     if request.method == 'POST':
+#         form = AdminRegisterForm(request.POST)
+#         if form.is_valid():
+#             user = form.save(commit=False)
+#             user.is_staff = True
+#             user.is_superuser = True
+#             user.save()
             
-            if hasattr(form, 'save_m2m'):
-                form.save_m2m()
+#             if hasattr(form, 'save_m2m'):
+#                 form.save_m2m()
                 
-            messages.success(request, 'Admin account created successfully! You are now a superuser.')
-            return redirect('store:admin_login')
-    else:
-        form = AdminRegisterForm()
+#             messages.success(request, 'Admin account created successfully! You are now a superuser.')
+#             return redirect('store:admin_login')
+#     else:
+#         form = AdminRegisterForm()
     
-    return render(request, 'store/admin/register.html', {'form': form})
+#     return render(request, 'store/admin/register.html', {'form': form})
+
+
 
 
 def admin_login(request):
@@ -285,10 +302,13 @@ def admin_login(request):
     return render(request, 'store/admin/login.html', {'form': form, 'error': error})
 
 
+
+
 def admin_logout(request):
     logout(request)
     messages.success(request, 'You have been logged out.')
     return redirect('store:admin_login')
+
 
 
 @login_required(login_url='store:admin_login')
@@ -314,6 +334,7 @@ def admin_dashboard(request):
         'stats': stats,
         'active_admin_nav': 'dashboard',
     })
+
 
 
 @login_required(login_url='store:admin_login')
