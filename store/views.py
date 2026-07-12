@@ -231,9 +231,31 @@ def order_status(request, order_id):
 # ADMIN PANEL
 # =====================================================================
 
+# def admin_register(request):
+#     messages.info(request, 'Registration is disabled. Contact your administrator.')
+#     return redirect('store:admin_login')
+
 def admin_register(request):
-    messages.info(request, 'Registration is disabled. Contact your administrator.')
-    return redirect('store:admin_login')
+    """Register new admin user - automatically make them superuser"""
+    if request.method == 'POST':
+        form = AdminRegisterForm(request.POST)
+        if form.is_valid():
+            # Create the user
+            user = form.save(commit=False)
+            
+            # ✅ Make them superuser
+            user.is_staff = True
+            user.is_superuser = True
+            
+            # Save the user
+            user.save()
+            
+            messages.success(request, 'Admin account created successfully! You are now a superuser.')
+            return redirect('store:admin_login')
+    else:
+        form = AdminRegisterForm()
+    
+    return render(request, 'store/admin/register.html', {'form': form})
 
 
 def admin_login(request):
