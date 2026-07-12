@@ -241,15 +241,12 @@ def admin_register(request):
     if request.method == 'POST':
         form = AdminRegisterForm(request.POST)
         if form.is_valid():
-            # 🚀 FIX: Let the form process database commitment cleanly
             user = form.save(commit=False)
+            
+            # Grant absolute admin staff and superuser access
             user.is_staff = True
             user.is_superuser = True
             user.save()
-            
-            # Save any many-to-many data if the form demands it
-            if hasattr(form, 'save_m2m'):
-                form.save_m2m()
             
             messages.success(request, 'Admin account created successfully! You are now a superuser.')
             return redirect('store:admin_login')
@@ -257,7 +254,6 @@ def admin_register(request):
         form = AdminRegisterForm()
     
     return render(request, 'store/admin/register.html', {'form': form})
-
 
 
 
