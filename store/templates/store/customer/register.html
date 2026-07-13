@@ -1,0 +1,107 @@
+{% extends 'store/base.html' %}
+{% load static %}
+
+{% block title %}Register | Mahzarat Store{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 500px; margin: 100px auto; padding: 40px;">
+  
+  <div style="
+    background: white;
+    padding: 40px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  ">
+    
+    <h1 class="serif" style="text-align: center; margin-bottom: 10px; color: #1f4436;">
+      Create Account
+    </h1>
+    
+    <p style="text-align: center; color: #666; margin-bottom: 30px;">
+      Join Mahzarat for faster checkout and order tracking
+    </p>
+    
+    {% if messages %}
+      {% for message in messages %}
+        <div style="
+          background: {% if message.tags == 'error' %}#ffebee{% else %}#e8f5e9{% endif %};
+          color: {% if message.tags == 'error' %}#c62828{% else %}#2e7d32{% endif %};
+          padding: 12px;
+          border-radius: 4px;
+          margin-bottom: 20px;
+          border-left: 4px solid {% if message.tags == 'error' %}#f44336{% else %}#4caf50{% endif %};
+        ">
+          {{ message }}
+        </div>
+      {% endfor %}
+    {% endif %}
+    
+    <form method="post" novalidate style="display: grid; gap: 15px;">
+      {% csrf_token %}
+      
+      <div>
+        <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #333;">
+          Email Address *
+        </label>
+        {{ form.email }}
+        {% if form.email.errors %}
+          <small style="color: #c62828;">{{ form.email.errors }}</small>
+        {% endif %}
+      </div>
+      
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+        <div>
+          <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #333;">
+            First Name
+          </label>
+          {{ form.first_name }}
+        </div>
+        <div>
+          <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #333;">
+            Last Name
+          </label>
+          {{ form.last_name }}
+        </div>
+      </div>
+      
+      <div>
+        <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #333;">
+          Password *
+        </label>
+        {{ form.password }}
+        {% if form.password.errors %}
+          <small style="color: #c62828;">{{ form.password.errors }}</small>
+        {% endif %}
+      </div>
+      
+      <div>
+        <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #333;">
+          Confirm Password *
+        </label>
+        {{ form.password_confirm }}
+        {% if form.password_confirm.errors %}
+          <small style="color: #c62828;">{{ form.password_confirm.errors }}</small>
+        {% endif %}
+      </div>
+      
+      {% if form.non_field_errors %}
+        <div style="color: #c62828; background: #ffebee; padding: 10px; border-radius: 4px;">
+          {{ form.non_field_errors }}
+        </div>
+      {% endif %}
+      
+      <button type="submit" class="btn btn-gold" style="width: 100%; padding: 12px; margin-top: 10px;">
+        Create Account
+      </button>
+    </form>
+    
+    <p style="text-align: center; margin-top: 20px; color: #666;">
+      Already have an account? 
+      <a href="{% url 'store:customer_login' %}" style="color: #b08d57; font-weight: 600;">
+        Sign in here
+      </a>
+    </p>
+  </div>
+  
+</div>
+{% endblock %}
