@@ -545,3 +545,90 @@ def admin_update_shipping(request):
 
 
 
+
+def customer_register(request):
+    """Customer registration - separate from admin"""
+    if request.user.is_authenticated and not request.user.is_staff:
+        return redirect('store:customer_dashboard')
+    
+    if request.method == 'POST':
+        form = CustomerRegisterForm(request.POST)
+        if form.is_valid():
+            try:
+                user = form.save()
+                messages.success(request, 'Account created! Please log in.')
+                return redirect('store:customer_login')
+            except Exception as e:
+                messages.error(request, f'Registration error: {str(e)}')
+    else:
+        form = CustomerRegisterForm()
+    
+    return render(request, 'store/customer/register.html', {'form': form})
+
+
+def customer_login(request):
+    """Customer login - separate from admin"""
+    if request.user.is_authenticated and not request.user.is_staff:
+        return redirect('store:customer_dashboard')
+    
+    if request.method == 'POST':
+        form = CustomerLoginForm(request.POST)
+        if form.is_valid():
+            email = form.cleaned_data['email'].strip()
+            password = form.cleaned_data['password']
+            
+            # Try to find user by email or username
+            try:
+                user = User.objects.get(email__iexact=email)
+            except User.DoesNotExist:
+                user = None
+            
+            if user:
+                user = authenticate(request, username=user.username, password=password)
+            
+            if user and not user.is_staff:  # Only allow customer login
+                login(request, user)
+                next_url = request.GET.get('next', 'store:customer_dashboard')
+                return redirect(next_url)
+            else:
+                messages.error(request, 'Invalid email or password.')
+    else:
+        form = CustomerLoginForm()
+    
+    return render(request, 'store/customer/login.html', {'form': form})
+
+
+def customer_logout(request):
+    """Customer logout"""
+    logout(request)
+    messages.success(request, 'Logged out successfully.')
+    return redirect('store:index')
+
+
+@login_required(login_url='store:customer_login')
+def customer_dashboard(request):
+    """Customer dashboard - profile and order history"""
+    if request.user.is_staff:
+        return redirect('store:admin_dashboard')
+    
+    profile = request.user.customer_profile
+    orders = Order.objects.filter(customer_email=request.user.email).order_by('-created_at')
+    
+    if request.method == 'POST':
+        form = BillingAddressForm(request.POST, instance=profile)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Billing address updated!')
+            return redirect('store:customer_dashboard')
+    else:
+        form = BillingAddressForm(instance=profile)
+    
+    return render(request, 'store/customer/dashboard.html', {
+        'profile': profile,
+        'orders': orders,
+        'form': form,
+    })
+
+
+
+
