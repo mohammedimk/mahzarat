@@ -389,74 +389,77 @@ if(document.getElementById('burgerBtn')) {
 }
     
 
+
 // ===== CHECKOUT MODAL GENERATOR =====
-
-
 function showCheckoutModal() {
   const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
   
   const html = `
-    <div id="checkoutModal" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: center; justify-content: center;">
-      <div style="background: white; border-radius: 8px; padding: 30px; max-width: 450px; width: 90%; max-height: 90vh; overflow-y: auto;">
-        <h2 class="serif">Billing Details</h2>
-        <p style="color: #666; margin-bottom: 20px;">Enter your billing information</p>
+    <div id="checkoutModal" style="
+      position: fixed; 
+      top: 0; 
+      left: 0; 
+      right: 0; 
+      bottom: 0;
+      background: rgba(0,0,0,0.6); 
+      z-index: 99999; 
+      display: flex; 
+      align-items: center; 
+      justify-content: center;
+    ">
+      <div style="
+        background: white; 
+        border-radius: 8px; 
+        padding: 30px;
+        max-width: 400px; 
+        width: 90%;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+        position: relative;
+        z-index: 100000;
+      ">
+        <h2 class="serif" style="margin-top: 0;">Checkout</h2>
+        <p style="color: #666; margin-bottom: 20px;">Enter your details to proceed to payment</p>
         
-        <form id="checkoutForm" method="POST" action="/checkout/">
+        <form id="checkoutModalForm" method="POST" action="/checkout/">
           <input type="hidden" name="csrfmiddlewaretoken" value="${csrfToken}">
           <input type="hidden" name="cart_json" value='${JSON.stringify(cart)}'>
           
-          <!-- Full Name -->
           <div style="margin-bottom: 15px;">
-            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Full Name *</label>
-            <input type="text" name="customer_name" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem; box-sizing: border-box;" placeholder="Enter your full name">
+            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Full Name</label>
+            <input type="text" name="customer_name" required style="
+              width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;
+              font-family: inherit; font-size: 1rem; box-sizing: border-box;
+            " placeholder="Enter your full name">
           </div>
           
-          <!-- Email -->
           <div style="margin-bottom: 15px;">
-            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Email *</label>
-            <input type="email" name="customer_email" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem; box-sizing: border-box;" placeholder="your@email.com">
+            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Email</label>
+            <input type="email" name="customer_email" required style="
+              width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;
+              font-family: inherit; font-size: 1rem; box-sizing: border-box;
+            " placeholder="your@email.com">
           </div>
           
-          <!-- Phone -->
-          <div style="margin-bottom: 15px;">
-            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Phone Number *</label>
-            <input type="tel" name="customer_phone" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem; box-sizing: border-box;" placeholder="+234 8012345678">
-          </div>
-          
-          <!-- Address -->
-          <div style="margin-bottom: 15px;">
-            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Address</label>
-            <input type="text" name="billing_address" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem; box-sizing: border-box;" placeholder="House/Street address">
-          </div>
-          
-          <!-- City -->
-          <div style="margin-bottom: 15px;">
-            <label style="display: block; margin-bottom: 5px; font-weight: 600;">City</label>
-            <input type="text" name="billing_city" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem; box-sizing: border-box;" placeholder="City">
-          </div>
-          
-          <!-- State -->
-          <div style="margin-bottom: 15px;">
-            <label style="display: block; margin-bottom: 5px; font-weight: 600;">State/Province</label>
-            <input type="text" name="billing_state" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem; box-sizing: border-box;" placeholder="State">
-          </div>
-          
-          <!-- ZIP -->
           <div style="margin-bottom: 20px;">
-            <label style="display: block; margin-bottom: 5px; font-weight: 600;">ZIP/Postal Code</label>
-            <input type="text" name="billing_zip" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem; box-sizing: border-box;" placeholder="Postal code">
+            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Phone Number</label>
+            <input type="tel" name="customer_phone" required style="
+              width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;
+              font-family: inherit; font-size: 1rem; box-sizing: border-box;
+            " placeholder="+234 8012345678">
           </div>
           
-          <button type="submit" class="btn btn-gold" style="width: 100%; margin-bottom: 10px;">Proceed to Payment</button>
-          <button type="button" class="btn btn-outline" style="width: 100%;" onclick="this.closest('#checkoutModal').remove();">Cancel</button>
+          <button type="submit" class="btn btn-gold" style="width: 100%; margin-bottom: 10px; padding: 12px; cursor: pointer;">
+            Proceed to Payment
+          </button>
+          <button type="button" class="btn btn-outline" style="width: 100%; padding: 12px; cursor: pointer;" onclick="this.closest('#checkoutModal').remove();">
+            Cancel
+          </button>
         </form>
       </div>
-    </div>`;
+    </div>
+  `;
   
   document.body.insertAdjacentHTML('beforeend', html);
-}
-
 
 
 
