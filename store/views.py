@@ -131,13 +131,60 @@ def search_view(request):
     })
 
 
+
+# @require_http_methods(["POST"])
+# @csrf_exempt
+# def checkout(request):
+#     """
+#     >>> CHECKOUT PAGE <<<
+#     User submits cart details and personal info.
+#     Creates an Order record and redirects to payment page.
+#     """
+#     try:
+#         cart_json = request.POST.get('cart_json', '[]')
+#         cart = json.loads(cart_json)
+
+#         if not cart:
+#             messages.error(request, 'Your cart is empty.')
+#             return redirect('store:index')
+
+#         customer_name = request.POST.get('customer_name', '').strip()
+#         customer_email = request.POST.get('customer_email', '').strip()
+#         customer_phone = request.POST.get('customer_phone', '').strip()
+
+#         if not customer_name or not customer_email or not customer_phone:
+#             messages.error(request, 'Please fill in all required fields correctly.')
+#             return redirect('store:index')
+
+#         total_amount = sum(float(item.get('price', 0)) * int(item.get('qty', 1)) for item in cart)
+
+#         date_str = timezone.now().strftime('%y%m%d') 
+#         uuid_str = str(uuid.uuid4())[:6].upper()      
+#         order_id = f"ORD-{date_str}-{uuid_str}"
+
+#         order = Order.objects.create(
+#             order_id=order_id,
+#             customer_name=customer_name,
+#             customer_email=customer_email,
+#             customer_phone=customer_phone,
+#             cart_items=cart,
+#             total_amount=total_amount,
+#         )
+
+#         return redirect('store:payment', order_id=order.order_id)
+
+#     except Exception as e:
+#         messages.error(request, f'Checkout error: {str(e)}')
+#         return redirect('store:index')
+
+
+
 @require_http_methods(["POST"])
 @csrf_exempt
 def checkout(request):
     """
-    >>> CHECKOUT PAGE <<<
-    User submits cart details and personal info.
-    Creates an Order record and redirects to payment page.
+    Checkout - Creates order with billing details.
+    Can be guest or logged-in customer.
     """
     try:
         cart_json = request.POST.get('cart_json', '[]')
@@ -147,20 +194,30 @@ def checkout(request):
             messages.error(request, 'Your cart is empty.')
             return redirect('store:index')
 
+        # Get customer info from form
         customer_name = request.POST.get('customer_name', '').strip()
         customer_email = request.POST.get('customer_email', '').strip()
         customer_phone = request.POST.get('customer_phone', '').strip()
+        
+        # Optional billing address fields
+        billing_address = request.POST.get('billing_address', '').strip()
+        billing_city = request.POST.get('billing_city', '').strip()
+        billing_state = request.POST.get('billing_state', '').strip()
+        billing_zip = request.POST.get('billing_zip', '').strip()
 
         if not customer_name or not customer_email or not customer_phone:
-            messages.error(request, 'Please fill in all required fields correctly.')
+            messages.error(request, 'Please fill in all required fields.')
             return redirect('store:index')
 
+        # Calculate total
         total_amount = sum(float(item.get('price', 0)) * int(item.get('qty', 1)) for item in cart)
 
-        date_str = timezone.now().strftime('%y%m%d') 
-        uuid_str = str(uuid.uuid4())[:6].upper()      
+        # Generate order ID
+        date_str = timezone.now().strftime('%y%m%d')
+        uuid_str = str(uuid.uuid4())[:6].upper()
         order_id = f"ORD-{date_str}-{uuid_str}"
 
+        # Create order
         order = Order.objects.create(
             order_id=order_id,
             customer_name=customer_name,
@@ -170,11 +227,32 @@ def checkout(request):
             total_amount=total_amount,
         )
 
+        # If logged-in customer, update their profile with billing info
+        if request.user.is_authenticated and not request.user.is_staff:
+            try:
+                profile = request.user.customer_profile
+                profile.phone = customer_phone
+                profile.billing_address = billing_address
+                profile.billing_city = billing_city
+                profile.billing_state = billing_state
+                profile.billing_zip = billing_zip
+                profile.save()
+            except:
+                pass
+
         return redirect('store:payment', order_id=order.order_id)
 
     except Exception as e:
         messages.error(request, f'Checkout error: {str(e)}')
         return redirect('store:index')
+
+
+
+
+
+
+
+
 
 
 def payment(request, order_id):
