@@ -1,0 +1,173 @@
+
+{% extends 'store/base.html' %}
+{% load static %}
+
+{% block title %}My Account | Mahzarat Store{% endblock %}
+
+{% block content %}
+<div class="container" style="margin: 80px auto; max-width: 1000px;">
+  
+  <h1 class="serif" style="margin-bottom: 30px;">My Account</h1>
+  
+  <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 40px;">
+    
+    <!-- LEFT: Profile Card -->
+    <div style="
+      background: #f9f7f3;
+      padding: 25px;
+      border-radius: 8px;
+      border-left: 4px solid #b08d57;
+      height: fit-content;
+    ">
+      
+      <h3 style="margin-top: 0; color: #1f4436;">Profile</h3>
+      
+      <div style="margin-bottom: 20px;">
+        <p style="margin: 0 0 5px 0; color: #666; font-size: 0.9rem;">Name</p>
+        <p style="margin: 0; font-weight: 600; color: #333;">
+          {{ user.get_full_name|default:user.email }}
+        </p>
+      </div>
+      
+      <div style="margin-bottom: 20px;">
+        <p style="margin: 0 0 5px 0; color: #666; font-size: 0.9rem;">Email</p>
+        <p style="margin: 0; font-weight: 600; color: #333;">{{ user.email }}</p>
+      </div>
+      
+      <div style="margin-bottom: 20px;">
+        <p style="margin: 0 0 5px 0; color: #666; font-size: 0.9rem;">Phone</p>
+        <p style="margin: 0; font-weight: 600; color: #333;">
+          {{ profile.phone|default:"Not set" }}
+        </p>
+      </div>
+      
+      <a href="{% url 'store:customer_logout' %}" class="btn btn-outline" style="width: 100%; text-align: center;">
+        Logout
+      </a>
+    </div>
+    
+    <!-- RIGHT: Content -->
+    <div>
+      
+      <!-- Billing Address Section -->
+      <div style="
+        background: white;
+        padding: 30px;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        margin-bottom: 30px;
+      ">
+        
+        <h2 style="margin-top: 0; color: #1f4436; border-bottom: 2px solid #b08d57; padding-bottom: 10px;">
+          📍 Billing Address
+        </h2>
+        
+        <form method="post" style="display: grid; gap: 15px; margin-top: 20px;">
+          {% csrf_token %}
+          
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+            <div>
+              <label style="display: block; margin-bottom: 5px; font-weight: 600;">Phone</label>
+              {{ form.phone }}
+            </div>
+            <div>
+              <label style="display: block; margin-bottom: 5px; font-weight: 600;">City</label>
+              {{ form.billing_city }}
+            </div>
+          </div>
+          
+          <div>
+            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Address</label>
+            {{ form.billing_address }}
+          </div>
+          
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+            <div>
+              <label style="display: block; margin-bottom: 5px; font-weight: 600;">State/Province</label>
+              {{ form.billing_state }}
+            </div>
+            <div>
+              <label style="display: block; margin-bottom: 5px; font-weight: 600;">ZIP/Postal Code</label>
+              {{ form.billing_zip }}
+            </div>
+          </div>
+          
+          <button type="submit" class="btn btn-gold">Save Billing Address</button>
+        </form>
+      </div>
+      
+      <!-- Order History Section -->
+      <div style="
+        background: white;
+        padding: 30px;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      ">
+        
+        <h2 style="margin-top: 0; color: #1f4436; border-bottom: 2px solid #b08d57; padding-bottom: 10px;">
+          📦 Order History
+        </h2>
+        
+        {% if orders %}
+          <div style="margin-top: 20px;">
+            {% for order in orders %}
+              <div style="
+                background: #f9f7f3;
+                padding: 15px;
+                border-radius: 6px;
+                margin-bottom: 15px;
+                border-left: 4px solid {% if order.status == 'completed' %}#4caf50{% elif order.status == 'pending' %}#ff9800{% else %}#f44336{% endif %};
+              ">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <div>
+                    <p style="margin: 0 0 5px 0; font-weight: 600; color: #1f4436;">
+                      {{ order.order_id }}
+                    </p>
+                    <p style="margin: 0; font-size: 0.9rem; color: #666;">
+                      {{ order.created_at|date:"F d, Y" }}
+                    </p>
+                  </div>
+                  <div style="text-align: right;">
+                    <p style="margin: 0 0 5px 0; font-weight: 600; font-size: 1.2rem; color: #b08d57;">
+                      ₦{{ order.total_amount|floatformat:0 }}
+                    </p>
+                    <p style="margin: 0; font-size: 0.85rem;">
+                      {% if order.status == 'pending' %}
+                        <span style="color: #ff9800; font-weight: 600;">⏳ Pending</span>
+                      {% elif order.status == 'completed' %}
+                        <span style="color: #4caf50; font-weight: 600;">✅ Completed</span>
+                      {% else %}
+                        <span style="color: #f44336; font-weight: 600;">❌ Cancelled</span>
+                      {% endif %}
+                    </p>
+                  </div>
+                </div>
+                
+                <p style="margin: 10px 0 0 0; font-size: 0.9rem; color: #666;">
+                  {{ order.cart_items|length }} item(s)
+                </p>
+                
+                <a href="{% url 'store:order_status' order.order_id %}" style="
+                  display: inline-block;
+                  margin-top: 10px;
+                  color: #b08d57;
+                  text-decoration: none;
+                  font-weight: 600;
+                  font-size: 0.9rem;
+                ">
+                  View Details →
+                </a>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <p style="text-align: center; color: #999; margin-top: 20px;">
+            No orders yet. <a href="{% url 'store:index' %}" style="color: #b08d57; font-weight: 600;">Start shopping</a>
+          </p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  
+</div>
+{% endblock %}
