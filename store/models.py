@@ -184,3 +184,49 @@ class Order(models.Model):
         self.status = 'cancelled'
         self.save()
 
+
+
+
+class CustomerProfile(models.Model):
+    """Customer profile - extends Django User with billing address"""
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='customer_profile')
+    phone = models.CharField(max_length=20, blank=True)
+    billing_address = models.TextField(blank=True)
+    billing_city = models.CharField(max_length=100, blank=True)
+    billing_state = models.CharField(max_length=100, blank=True)
+    billing_zip = models.CharField(max_length=20, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.user.get_full_name() or self.user.username}'s Profile"
+
+    class Meta:
+        verbose_name_plural = 'Customer Profiles'
+
+    @property
+    def full_address(self):
+        """Return complete formatted address"""
+        parts = [self.billing_address, self.billing_city, self.billing_state, self.billing_zip]
+        return ', '.join([p for p in parts if p])
+
+
+# Signal to automatically create CustomerProfile when User is created
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+
+@receiver(post_save, sender=User)
+def create_customer_profile(sender, instance, created, **kwargs):
+    """Auto-create CustomerProfile when User is created"""
+    if created and not instance.is_staff:  # Only for customers, not admins
+        CustomerProfile.objects.get_or_create(user=instance)
+
+@receiver(post_save, sender=User)
+def save_customer_profile(sender, instance, **kwargs):
+    """Auto-save CustomerProfile when User is saved"""
+    if not instance.is_staff:
+        if hasattr(instance, 'customer_profile'):
+            instance.customer_profile.save()
+
+
+
