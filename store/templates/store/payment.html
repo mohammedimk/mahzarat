@@ -6,12 +6,76 @@
 {% block content %}
 <div class="section" style="padding-top: 150px;">
   <div class="container">
-    <div class="payment-wrapper">
+    
+    
+        
+<div class="payment-wrapper">
+  <div class="payment-summary">
+    <h2 class="serif">Order Summary</h2>
+    
+    <!-- NEW: Customer name display -->
+    <div style="
+      background: #f5f1eb;
+      padding: 12px;
+      border-radius: 4px;
+      margin-bottom: 15px;
+      border-left: 3px solid #b08d57;
+    ">
+      <p style="margin: 0 0 5px 0; font-size: 0.85rem; color: #666;">Customer</p>
+      <p style="margin: 0; font-weight: 600; color: #333;">{{ order.customer_name }}</p>
+    </div>
+    
+    <div class="order-id">Order ID: <strong>{{ order.order_id }}</strong></div>
+
+
+        
+     <div class="payment-summary">
+    <h2 class="serif">Order Summary</h2>
+    
+    <!-- NEW: Customer name display -->
+    <div style="
+      background: #f5f1eb;
+      padding: 12px;
+      border-radius: 4px;
+      margin-bottom: 15px;
+      border-left: 3px solid #b08d57;
+    ">
+      <p style="margin: 0 0 5px 0; font-size: 0.85rem; color: #666;">Customer</p>
+      <p style="margin: 0; font-weight: 600; color: #333;">{{ order.customer_name }}</p>
+    </div>
+    
+    <div class="order-id">Order ID: <strong>{{ order.order_id }}</strong></div>
+
+####
+    
+<div class="payment-wrapper">
+  <div class="payment-summary">
+    <h2 class="serif">Order Summary</h2>
+    
+    <!-- NEW: Customer name display -->
+    <div style="
+      background: #f5f1eb;
+      padding: 12px;
+      border-radius: 4px;
+      margin-bottom: 15px;
+      border-left: 3px solid #b08d57;
+    ">
+      <p style="margin: 0 0 5px 0; font-size: 0.85rem; color: #666;">Customer</p>
+      <p style="margin: 0; font-weight: 600; color: #333;">{{ order.customer_name }}</p>
+    </div>
+    
+    <div class="order-id">Order ID: <strong>{{ order.order_id }}</strong></div>
+
+
+
+
       
-      <!-- LEFT: Order Summary -->
-      <div class="payment-summary">
-        <h2 class="serif">Order Summary</h2>
-        <div class="order-id">Order ID: <strong>{{ order.order_id }}</strong></div>
+
+
+
+           
+
+
         
         <div class="order-items">
           <h4>Items</h4>
