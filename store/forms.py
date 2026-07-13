@@ -209,3 +209,152 @@ class CheckoutForm(forms.Form):
             raise forms.ValidationError('Phone number must contain digits.')
         return phone
 
+
+
+
+
+from django import forms
+from django.contrib.auth.models import User
+from .models import CustomerProfile, Order
+
+
+class CustomerRegisterForm(forms.ModelForm):
+    """Customer registration form (separate from admin)"""
+    password = forms.CharField(
+        label='Password',
+        widget=forms.PasswordInput(attrs={
+            'placeholder': 'Enter password',
+            'class': 'form-control'
+        })
+    )
+    password_confirm = forms.CharField(
+        label='Confirm Password',
+        widget=forms.PasswordInput(attrs={
+            'placeholder': 'Confirm password',
+            'class': 'form-control'
+        })
+    )
+    
+    class Meta:
+        model = User
+        fields = ('email', 'first_name', 'last_name')
+        widgets = {
+            'email': forms.EmailInput(attrs={
+                'placeholder': 'Enter email',
+                'class': 'form-control'
+            }),
+            'first_name': forms.TextInput(attrs={
+                'placeholder': 'First name',
+                'class': 'form-control'
+            }),
+            'last_name': forms.TextInput(attrs={
+                'placeholder': 'Last name',
+                'class': 'form-control'
+            }),
+        }
+    
+    def clean(self):
+        """Validate passwords match"""
+        cleaned_data = super().clean()
+        password = cleaned_data.get('password')
+        password_confirm = cleaned_data.get('password_confirm')
+        
+        if password and password_confirm:
+            if password != password_confirm:
+                raise forms.ValidationError('Passwords do not match!')
+        
+        return cleaned_data
+    
+    def clean_email(self):
+        """Check email is unique"""
+        email = self.cleaned_data.get('email')
+        if User.objects.filter(email__iexact=email).exists():
+            raise forms.ValidationError('Email already registered!')
+        return email
+    
+    def save(self, commit=True):
+        """Save user with encrypted password"""
+        user = super().save(commit=False)
+        user.username = self.cleaned_data['email']  # Use email as username
+        user.set_password(self.cleaned_data['password'])
+        if commit:
+            user.save()
+        return user
+
+
+class CustomerLoginForm(forms.Form):
+    """Customer login form (separate from admin)"""
+    email = forms.EmailField(widget=forms.EmailInput(attrs={
+        'placeholder': 'Email or username',
+        'class': 'form-control'
+    }))
+    password = forms.CharField(widget=forms.PasswordInput(attrs={
+        'placeholder': 'Password',
+        'class': 'form-control'
+    }))
+
+
+class BillingAddressForm(forms.ModelForm):
+    """Billing address form for customer profile"""
+    class Meta:
+        model = CustomerProfile
+        fields = ('phone', 'billing_address', 'billing_city', 'billing_state', 'billing_zip')
+        widgets = {
+            'phone': forms.TextInput(attrs={
+                'placeholder': '+234 803 5845 210',
+                'class': 'form-control'
+            }),
+            'billing_address': forms.TextInput(attrs={
+                'placeholder': 'House number/name and street',
+                'class': 'form-control'
+            }),
+            'billing_city': forms.TextInput(attrs={
+                'placeholder': 'City',
+                'class': 'form-control'
+            }),
+            'billing_state': forms.TextInput(attrs={
+                'placeholder': 'State/Province',
+                'class': 'form-control'
+            }),
+            'billing_zip': forms.TextInput(attrs={
+                'placeholder': 'Postal/ZIP code',
+                'class': 'form-control'
+            }),
+        }
+
+
+class CheckoutForm(forms.Form):
+    """Checkout form - collects billing details for guests or customers"""
+    email = forms.EmailField(widget=forms.EmailInput(attrs={
+        'placeholder': 'Email',
+        'class': 'form-control'
+    }))
+    first_name = forms.CharField(widget=forms.TextInput(attrs={
+        'placeholder': 'First name',
+        'class': 'form-control'
+    }))
+    last_name = forms.CharField(widget=forms.TextInput(attrs={
+        'placeholder': 'Last name',
+        'class': 'form-control'
+    }))
+    phone = forms.CharField(widget=forms.TextInput(attrs={
+        'placeholder': '+234 803 5845 210',
+        'class': 'form-control'
+    }))
+    address = forms.CharField(widget=forms.TextInput(attrs={
+        'placeholder': 'House/street address',
+        'class': 'form-control'
+    }))
+    city = forms.CharField(widget=forms.TextInput(attrs={
+        'placeholder': 'City',
+        'class': 'form-control'
+    }))
+    state = forms.CharField(widget=forms.TextInput(attrs={
+        'placeholder': 'State/Province',
+        'class': 'form-control'
+    }))
+    zip_code = forms.CharField(widget=forms.TextInput(attrs={
+        'placeholder': 'ZIP/Postal code',
+        'class': 'form-control'
+    }))
+
