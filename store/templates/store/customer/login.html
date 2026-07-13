@@ -1,0 +1,77 @@
+{% extends 'store/base.html' %}
+{% load static %}
+
+{% block title %}Login | Mahzarat Store{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 500px; margin: 100px auto; padding: 40px;">
+  
+  <div style="
+    background: white;
+    padding: 40px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  ">
+    
+    <h1 class="serif" style="text-align: center; margin-bottom: 10px; color: #1f4436;">
+      Welcome Back
+    </h1>
+    
+    <p style="text-align: center; color: #666; margin-bottom: 30px;">
+      Sign in to your Mahzarat account
+    </p>
+    
+    {% if messages %}
+      {% for message in messages %}
+        <div style="
+          background: {% if message.tags == 'error' %}#ffebee{% else %}#e8f5e9{% endif %};
+          color: {% if message.tags == 'error' %}#c62828{% else %}#2e7d32{% endif %};
+          padding: 12px;
+          border-radius: 4px;
+          margin-bottom: 20px;
+          border-left: 4px solid {% if message.tags == 'error' %}#f44336{% else %}#4caf50{% endif %};
+        ">
+          {{ message }}
+        </div>
+      {% endfor %}
+    {% endif %}
+    
+    <form method="post" novalidate style="display: grid; gap: 15px;">
+      {% csrf_token %}
+      
+      <div>
+        <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #333;">
+          Email Address *
+        </label>
+        {{ form.email }}
+      </div>
+      
+      <div>
+        <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #333;">
+          Password *
+        </label>
+        {{ form.password }}
+      </div>
+      
+      {% if form.non_field_errors %}
+        <div style="color: #c62828; background: #ffebee; padding: 10px; border-radius: 4px;">
+          {{ form.non_field_errors }}
+        </div>
+      {% endif %}
+      
+      <button type="submit" class="btn btn-gold" style="width: 100%; padding: 12px; margin-top: 10px;">
+        Sign In
+      </button>
+    </form>
+    
+    <p style="text-align: center; margin-top: 20px; color: #666;">
+      Don't have an account? 
+      <a href="{% url 'store:customer_register' %}" style="color: #b08d57; font-weight: 600;">
+        Create one here
+      </a>
+    </p>
+  </div>
+  
+</div>
+{% endblock %}
+
