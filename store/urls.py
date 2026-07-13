@@ -32,4 +32,11 @@ urlpatterns = [
     # Add this line right below your other admin/order routes
     path('admin-panel/orders/update-shipping/', views.admin_update_shipping, name='admin_update_shipping'),
 
+    path('login/', views.customer_login, name='customer_login'),
+    path('register/', views.customer_register, name='customer_register'),
+    path('logout/', views.customer_logout, name='customer_logout'),
+    path('dashboard/', views.customer_dashboard, name='customer_dashboard'),
+
+
+
 ]
