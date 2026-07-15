@@ -683,59 +683,72 @@ def customer_logout(request):
     return redirect('store:index')
 
 
+
+# @login_required(login_url='store:customer_login')
+# def customer_dashboard(request):
+#     """Customer dashboard - profile and order history"""
+#     if request.user.is_staff:
+#         return redirect('store:admin_dashboard')
+    
+#     # Get customer profile
+#     profile = request.user.customer_profile
+    
+#     # Get all orders for this customer
+#     orders = Order.objects.filter(customer_email=request.user.email).order_by('-created_at')
+    
+#     # Handle billing address update
+#     if request.method == 'POST':
+#         form = BillingAddressForm(request.POST, instance=profile)
+#         if form.is_valid():
+#             form.save()
+#             messages.success(request, 'Billing address updated!')
+#             return redirect('store:customer_dashboard')
+#     else:
+#         form = BillingAddressForm(instance=profile)
+    
+#     # Render dashboard with all data
+#     return render(request, 'store/customer/dashboard.html', {
+#         'profile': profile,
+#         'orders': orders,
+#         'form': form,
+#     })
+
+
+
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from .models import Order, CustomerProfile
+from .forms import BillingAddressForm
+
 @login_required(login_url='store:customer_login')
 def customer_dashboard(request):
-    """Customer dashboard - profile and order history"""
-    if request.user.is_staff:
-        return redirect('store:admin_dashboard')
+    # 1. Fetch or create the Customer Profile for the logged-in user
+    profile, created = CustomerProfile.objects.get_or_create(user=request.user)
     
-    profile = request.user.customer_profile
-    orders = Order.objects.filter(customer_email=request.user.email).order_by('-created_at')
-    
+    # 2. THE CRITICAL FIX: Fetch orders using the user's logged-in email
+    orders = Order.objects.filter(customer_email__iexact=request.user.email).order_id_or_created_at_desc()
+    # Note: If you don't have custom ordering, just use standard ordering:
+    orders = Order.objects.filter(customer_email__iexact=request.user.email).order_by('-created_at')
+
+    # 3. Handle the billing address form submission
     if request.method == 'POST':
         form = BillingAddressForm(request.POST, instance=profile)
         if form.is_valid():
             form.save()
-            messages.success(request, 'Billing address updated!')
+            messages.success(request, "Billing address updated successfully!")
             return redirect('store:customer_dashboard')
     else:
         form = BillingAddressForm(instance=profile)
-    
-    return render(request, 'store/customer/dashboard.html', {
+
+    context = {
         'profile': profile,
-        'orders': orders,
         'form': form,
-    })
+        'orders': orders, # This passes the fetched orders to your {% if orders %} template check
+    }
+    return render(request, 'store/dashboard.html', context) # Replace with your actual template path
 
 
-@login_required(login_url='store:customer_login')
-def customer_dashboard(request):
-    """Customer dashboard - profile and order history"""
-    if request.user.is_staff:
-        return redirect('store:admin_dashboard')
-    
-    # Get customer profile
-    profile = request.user.customer_profile
-    
-    # Get all orders for this customer
-    orders = Order.objects.filter(customer_email=request.user.email).order_by('-created_at')
-    
-    # Handle billing address update
-    if request.method == 'POST':
-        form = BillingAddressForm(request.POST, instance=profile)
-        if form.is_valid():
-            form.save()
-            messages.success(request, 'Billing address updated!')
-            return redirect('store:customer_dashboard')
-    else:
-        form = BillingAddressForm(instance=profile)
-    
-    # Render dashboard with all data
-    return render(request, 'store/customer/dashboard.html', {
-        'profile': profile,
-        'orders': orders,
-        'form': form,
-    })
 
 
 
