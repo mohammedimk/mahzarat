@@ -3,16 +3,14 @@ from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from PIL import Image
 
-from .models import Product, SiteSetting
+from .models import Product, SiteSetting, CustomerProfile, Order
 
 ALLOWED_IMAGE_EXTENSIONS = ('jpg', 'jpeg', 'png', 'webp', 'gif')
 MAX_IMAGE_SIZE = 5 * 1024 * 1024  # 5MB
 
 
 def validate_uploaded_image(uploaded_file):
-    """Shared validation used by both the product photo and site-setting photos:
-    checks extension, file size, and that the file is a genuine image (not just
-    something renamed with an image extension)."""
+    """Shared validation used by both the product photo and site-setting photos"""
     ext = uploaded_file.name.rsplit('.', 1)[-1].lower() if '.' in uploaded_file.name else ''
     if ext not in ALLOWED_IMAGE_EXTENSIONS:
         raise ValidationError('Photo must be a JPG, PNG, WEBP or GIF file.')
@@ -58,62 +56,20 @@ class AdminRegisterForm(forms.Form):
             self.add_error('confirm_password', 'Passwords do not match.')
         return cleaned
 
-    # 🚀 THE CRITICAL FIX: Adding a clean, explicit save method
     def save(self, commit=True):
-        """
-        Manually handles building and hashing the User instance 
-        since this is a plain form and not a ModelForm.
-        """
-        # Create an unsaved user instance using form clean details
         user = User(
             username=self.cleaned_data['username'],
             email=self.cleaned_data['email']
         )
-        
-        # Split full_name into first and last names if provided
         name_parts = self.cleaned_data['full_name'].strip().split(' ', 1)
         user.first_name = name_parts[0]
         if len(name_parts) > 1:
             user.last_name = name_parts[1]
             
-        # Crucial step: Securely hashes plain text into a DB-safe hash string
         user.set_password(self.cleaned_data['password'])
-        
         if commit:
             user.save()
-            
         return user
-
-# class AdminRegisterForm(forms.Form):
-#     full_name = forms.CharField(max_length=100, label='Full name')
-#     username = forms.CharField(max_length=30, label='Username')
-#     email = forms.EmailField(label='Email address')
-#     password = forms.CharField(widget=forms.PasswordInput, label='Password')
-#     confirm_password = forms.CharField(widget=forms.PasswordInput, label='Confirm password')
-
-#     def clean_username(self):
-#         username = self.cleaned_data['username'].strip()
-#         if not username.replace('_', '').isalnum():
-#             raise forms.ValidationError('Username may only contain letters, numbers and underscores.')
-#         if User.objects.filter(username__iexact=username).exists():
-#             raise forms.ValidationError('That username is already taken.')
-#         return username
-
-#     def clean_email(self):
-#         email = self.cleaned_data['email'].strip().lower()
-#         if User.objects.filter(email__iexact=email).exists():
-#             raise forms.ValidationError('An account with that email already exists.')
-#         return email
-
-#     def clean(self):
-#         cleaned = super().clean()
-#         password = cleaned.get('password')
-#         confirm = cleaned.get('confirm_password')
-#         if password and len(password) < 6:
-#             self.add_error('password', 'Password must be at least 6 characters.')
-#         if password and confirm and password != confirm:
-#             self.add_error('confirm_password', 'Passwords do not match.')
-#         return cleaned
 
 
 class AdminLoginForm(forms.Form):
@@ -183,99 +139,43 @@ class SiteSettingForm(forms.ModelForm):
         return self._clean_optional_image('lookbook_image_2')
 
 
-# >>> ADD THIS TO store/forms.py AT THE END <<<
-
-class CheckoutForm(forms.Form):
-    """Customer details form for checkout"""
-    customer_name = forms.CharField(
-        max_length=150,
-        label='Full name',
-        widget=forms.TextInput(attrs={'placeholder': 'Enter your full name'})
-    )
-    customer_email = forms.EmailField(
-        label='Email address',
-        widget=forms.EmailInput(attrs={'placeholder': 'your@email.com'})
-    )
-    customer_phone = forms.CharField(
-        max_length=20,
-        label='Phone number',
-        widget=forms.TextInput(attrs={'placeholder': '+234 8012345678'})
-    )
-
-    def clean_customer_phone(self):
-        phone = self.cleaned_data.get('customer_phone')
-        # Simple phone validation - just check it has digits
-        if not any(c.isdigit() for c in phone):
-            raise forms.ValidationError('Phone number must contain digits.')
-        return phone
-
-
-
-
-
-from django import forms
-from django.contrib.auth.models import User
-from .models import CustomerProfile, Order
-
-
 class CustomerRegisterForm(forms.ModelForm):
-    """Customer registration form (separate from admin)"""
+    """Customer registration form"""
     password = forms.CharField(
         label='Password',
-        widget=forms.PasswordInput(attrs={
-            'placeholder': 'Enter password',
-            'class': 'form-control'
-        })
+        widget=forms.PasswordInput(attrs={'placeholder': 'Enter password', 'class': 'form-control'})
     )
     password_confirm = forms.CharField(
         label='Confirm Password',
-        widget=forms.PasswordInput(attrs={
-            'placeholder': 'Confirm password',
-            'class': 'form-control'
-        })
+        widget=forms.PasswordInput(attrs={'placeholder': 'Confirm password', 'class': 'form-control'})
     )
     
     class Meta:
         model = User
         fields = ('email', 'first_name', 'last_name')
         widgets = {
-            'email': forms.EmailInput(attrs={
-                'placeholder': 'Enter email',
-                'class': 'form-control'
-            }),
-            'first_name': forms.TextInput(attrs={
-                'placeholder': 'First name',
-                'class': 'form-control'
-            }),
-            'last_name': forms.TextInput(attrs={
-                'placeholder': 'Last name',
-                'class': 'form-control'
-            }),
+            'email': forms.EmailInput(attrs={'placeholder': 'Enter email', 'class': 'form-control'}),
+            'first_name': forms.TextInput(attrs={'placeholder': 'First name', 'class': 'form-control'}),
+            'last_name': forms.TextInput(attrs={'placeholder': 'Last name', 'class': 'form-control'}),
         }
     
     def clean(self):
-        """Validate passwords match"""
         cleaned_data = super().clean()
         password = cleaned_data.get('password')
         password_confirm = cleaned_data.get('password_confirm')
-        
-        if password and password_confirm:
-            if password != password_confirm:
-                raise forms.ValidationError('Passwords do not match!')
-        
+        if password and password_confirm and password != password_confirm:
+            raise forms.ValidationError('Passwords do not match!')
         return cleaned_data
     
     def clean_email(self):
-        """Check email is unique"""
         email = self.cleaned_data.get('email')
         if User.objects.filter(email__iexact=email).exists():
             raise forms.ValidationError('Email already registered!')
         return email
     
     def save(self, commit=True):
-        """Save user with encrypted password"""
         user = super().save(commit=False)
-        user.username = self.cleaned_data['email']  # Use email as username
+        user.username = self.cleaned_data['email']
         user.set_password(self.cleaned_data['password'])
         if commit:
             user.save()
@@ -283,78 +183,30 @@ class CustomerRegisterForm(forms.ModelForm):
 
 
 class CustomerLoginForm(forms.Form):
-    """Customer login form (separate from admin)"""
-    email = forms.EmailField(widget=forms.EmailInput(attrs={
-        'placeholder': 'Email or username',
-        'class': 'form-control'
-    }))
-    password = forms.CharField(widget=forms.PasswordInput(attrs={
-        'placeholder': 'Password',
-        'class': 'form-control'
-    }))
+    email = forms.EmailField(widget=forms.EmailInput(attrs={'placeholder': 'Email or username', 'class': 'form-control'}))
+    password = forms.CharField(widget=forms.PasswordInput(attrs={'placeholder': 'Password', 'class': 'form-control'}))
 
 
 class BillingAddressForm(forms.ModelForm):
-    """Billing address form for customer profile"""
     class Meta:
         model = CustomerProfile
         fields = ('phone', 'billing_address', 'billing_city', 'billing_state', 'billing_zip')
         widgets = {
-            'phone': forms.TextInput(attrs={
-                'placeholder': '+234 803 5845 210',
-                'class': 'form-control'
-            }),
-            'billing_address': forms.TextInput(attrs={
-                'placeholder': 'House number/name and street',
-                'class': 'form-control'
-            }),
-            'billing_city': forms.TextInput(attrs={
-                'placeholder': 'City',
-                'class': 'form-control'
-            }),
-            'billing_state': forms.TextInput(attrs={
-                'placeholder': 'State/Province',
-                'class': 'form-control'
-            }),
-            'billing_zip': forms.TextInput(attrs={
-                'placeholder': 'Postal/ZIP code',
-                'class': 'form-control'
-            }),
+            'phone': forms.TextInput(attrs={'placeholder': '+234 803 5845 210', 'class': 'form-control'}),
+            'billing_address': forms.TextInput(attrs={'placeholder': 'House number/name and street', 'class': 'form-control'}),
+            'billing_city': forms.TextInput(attrs={'placeholder': 'City', 'class': 'form-control'}),
+            'billing_state': forms.TextInput(attrs={'placeholder': 'State/Province', 'class': 'form-control'}),
+            'billing_zip': forms.TextInput(attrs={'placeholder': 'Postal/ZIP code', 'class': 'form-control'}),
         }
 
 
 class CheckoutForm(forms.Form):
     """Checkout form - collects billing details for guests or customers"""
-    email = forms.EmailField(widget=forms.EmailInput(attrs={
-        'placeholder': 'Email',
-        'class': 'form-control'
-    }))
-    first_name = forms.CharField(widget=forms.TextInput(attrs={
-        'placeholder': 'First name',
-        'class': 'form-control'
-    }))
-    last_name = forms.CharField(widget=forms.TextInput(attrs={
-        'placeholder': 'Last name',
-        'class': 'form-control'
-    }))
-    phone = forms.CharField(widget=forms.TextInput(attrs={
-        'placeholder': '+234 803 5845 210',
-        'class': 'form-control'
-    }))
-    address = forms.CharField(widget=forms.TextInput(attrs={
-        'placeholder': 'House/street address',
-        'class': 'form-control'
-    }))
-    city = forms.CharField(widget=forms.TextInput(attrs={
-        'placeholder': 'City',
-        'class': 'form-control'
-    }))
-    state = forms.CharField(widget=forms.TextInput(attrs={
-        'placeholder': 'State/Province',
-        'class': 'form-control'
-    }))
-    zip_code = forms.CharField(widget=forms.TextInput(attrs={
-        'placeholder': 'ZIP/Postal code',
-        'class': 'form-control'
-    }))
-
+    email = forms.EmailField(widget=forms.EmailInput(attrs={'placeholder': 'Email', 'class': 'form-control'}))
+    first_name = forms.CharField(widget=forms.TextInput(attrs={'placeholder': 'First name', 'class': 'form-control'}))
+    last_name = forms.CharField(widget=forms.TextInput(attrs={'placeholder': 'Last name', 'class': 'form-control'}))
+    phone = forms.CharField(widget=forms.TextInput(attrs={'placeholder': '+234 803 5845 210', 'class': 'form-control'}))
+    address = forms.CharField(widget=forms.TextInput(attrs={'placeholder': 'House/street address', 'class': 'form-control'}))
+    city = forms.CharField(widget=forms.TextInput(attrs={'placeholder': 'City', 'class': 'form-control'}))
+    state = forms.CharField(widget=forms.TextInput(attrs={'placeholder': 'State/Province', 'class': 'form-control'}))
+    zip_code = forms.CharField(widget=forms.TextInput(attrs={'placeholder': 'ZIP/Postal code', 'class': 'form-control'}))
