@@ -253,8 +253,7 @@ def checkout(request):
 
 
 
-
-
+@login_required(login_url='store:customer_login')
 def payment(request, order_id):
     """
     >>> PAYMENT PAGE <<<
