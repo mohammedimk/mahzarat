@@ -2,6 +2,7 @@
 
 from django.contrib import admin
 from .models import Category, Product, SiteSetting, BankAccount, Order
+from django.utils import timezone
 
 
 @admin.register(Category)
@@ -84,6 +85,31 @@ class OrderAdmin(admin.ModelAdmin):
     def has_delete_permission(self, request):
         """Prevent accidental deletion of orders"""
         return False
+
+
+
+
+
+
+
+@admin.register(Order)
+class OrderAdmin(admin.ModelAdmin):
+    list_display = ('order_id', 'customer_name', 'status', 'is_delivered', 'created_at')
+    list_filter = ('status', 'is_delivered')
+    readonly_fields = ('order_id', 'created_at', 'completed_at', 'delivered_at')
+    
+    def save_model(self, request, obj, form, change):
+        # Automatically set completed_at timestamp if payment status moves to completed
+        if obj.status == 'completed' and not obj.completed_at:
+            obj.completed_at = timezone.now()
+            
+        # Automatically set delivered_at timestamp if is_delivered checkbox is checked
+        if obj.is_delivered and not obj.delivered_at:
+            obj.delivered_at = timezone.now()
+        elif not obj.is_delivered:
+            obj.delivered_at = None
+            
+        super().save_model(request, obj, form, change)
 
 
 
