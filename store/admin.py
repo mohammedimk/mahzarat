@@ -92,24 +92,81 @@ class BankAccountAdmin(admin.ModelAdmin):
 
 
 
+# @admin.register(Order)
+# class OrderAdmin(admin.ModelAdmin):
+#     list_display = ('order_id', 'customer_name', 'status', 'is_delivered', 'created_at')
+#     list_filter = ('status', 'is_delivered')
+#     readonly_fields = ('order_id', 'created_at', 'completed_at', 'delivered_at')
+    
+#     def save_model(self, request, obj, form, change):
+#         # Automatically set completed_at timestamp if payment status moves to completed
+#         if obj.status == 'completed' and not obj.completed_at:
+#             obj.completed_at = timezone.now()
+            
+#         # Automatically set delivered_at timestamp if is_delivered checkbox is checked
+#         if obj.is_delivered and not obj.delivered_at:
+#             obj.delivered_at = timezone.now()
+#         elif not obj.is_delivered:
+#             obj.delivered_at = None
+            
+#         super().save_model(request, obj, form, change)
+
+
+
+
+
+# =====================================================================
+# ORDER ADMIN - For tracking customer orders
+# =====================================================================
+
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
+    """
+    Admin interface for managing customer orders.
+    Shows and updates payment status, delivery status, and order details.
+    """
     list_display = ('order_id', 'customer_name', 'status', 'is_delivered', 'created_at')
-    list_filter = ('status', 'is_delivered')
-    readonly_fields = ('order_id', 'created_at', 'completed_at', 'delivered_at')
+    list_filter = ('status', 'is_delivered', 'created_at')
+    search_fields = ('order_id', 'customer_name', 'customer_email', 'customer_phone')
     
+    # Keep administrative timestamps secure and read-only
+    readonly_fields = ('order_id', 'created_at', 'completed_at', 'delivered_at', 'cart_items', 'total_amount')
+    
+    # Explicitly layout editable and read-only fields so Django Admin processes them correctly
+    fieldsets = (
+        ('Order & Status Verification', {
+            'fields': ('order_id', 'status', 'is_delivered')
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'completed_at', 'delivered_at'),
+        }),
+        ('Customer Details', {
+            'fields': ('customer_name', 'customer_email', 'customer_phone')
+        }),
+        ('Payment Details', {
+            'fields': ('cart_items', 'total_amount')
+        }),
+    )
+
     def save_model(self, request, obj, form, change):
-        # Automatically set completed_at timestamp if payment status moves to completed
+        """Automatically stamp or clean timestamps when status or delivery state changes"""
+        # 1. Automatically set completed_at timestamp if payment status moves to completed
         if obj.status == 'completed' and not obj.completed_at:
             obj.completed_at = timezone.now()
+        elif obj.status != 'completed':
+            obj.completed_at = None
             
-        # Automatically set delivered_at timestamp if is_delivered checkbox is checked
+        # 2. Automatically set delivered_at timestamp if is_delivered checkbox is checked
         if obj.is_delivered and not obj.delivered_at:
             obj.delivered_at = timezone.now()
         elif not obj.is_delivered:
             obj.delivered_at = None
             
         super().save_model(request, obj, form, change)
+
+    def has_delete_permission(self, request, obj=None):
+        """Prevent accidental deletion of orders by staff members"""
+        return False
 
 
 
