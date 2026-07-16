@@ -50,7 +50,7 @@
             <div class="timeline-content">
               <div class="timeline-title">Delivery Status</div>
               {% if order.is_delivered %}
-                <div class="timeline-date"> {{ order.get_status_display }} on {{ order.delivered_at|date:"M d, Y H:i" }}</div>
+                <div class="timeline-date">Delivered on {{ order.delivered_at|date:"M d, Y H:i" }}</div>
               {% elif order.status == 'completed' %}
                 <div class="timeline-date">Order is packed and package is on its way!</div>
               {% else %}
