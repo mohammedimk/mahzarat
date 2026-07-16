@@ -874,6 +874,21 @@ class BillingAddressForm(forms.ModelForm):
         }
 
 
+from django import template
+from django.contrib.auth.models import User
+from store.models import CustomerProfile
+
+register = template.Library()
+
+@register.filter
+def get_customer_profile(email):
+    try:
+        user = User.objects.get(email__iexact=email)
+        return user.customer_profile
+    except (User.DoesNotExist, AttributeError):
+        return None
+
+
 
 
 
