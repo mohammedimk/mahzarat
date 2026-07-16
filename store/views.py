@@ -294,6 +294,25 @@ def payment_success(request, order_id):
         return redirect('store:index')
 
 
+
+# def order_status(request, order_id):
+#     try:
+#         order = get_object_or_404(Order, order_id=order_id)
+#         return render(request, 'store/order_status.html', {
+#             'order': order,
+#             'currency_symbol': '₦',
+#         })
+#     except Exception as e:
+#         messages.error(request, f'Error: {str(e)}')
+#         return redirect('store:index')
+
+
+
+from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib import messages
+from django.http import Http404
+from .models import Order
+
 def order_status(request, order_id):
     try:
         order = get_object_or_404(Order, order_id=order_id)
@@ -301,9 +320,19 @@ def order_status(request, order_id):
             'order': order,
             'currency_symbol': '₦',
         })
+    except Http404:
+        # Let 404 pass through normally so the user sees a "Page Not Found" instead of a redirect error
+        raise
     except Exception as e:
-        messages.error(request, f'Error: {str(e)}')
+        messages.error(request, f'An unexpected error occurred: {str(e)}')
         return redirect('store:index')
+
+
+
+
+
+
+
 
 
 # =====================================================================
