@@ -149,7 +149,10 @@ class Order(models.Model):
         ('completed', 'Completed'),
         ('cancelled', 'Cancelled'),
     ]
-
+    
+    is_delivered = models.BooleanField(default=False)
+    delivered_at = models.DateTimeField(blank=True, null=True)
+    
     # Order tracking
     order_id = models.CharField(max_length=50, unique=True)  
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
