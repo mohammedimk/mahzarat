@@ -694,7 +694,7 @@ def customer_dashboard(request):
     
     # Get all orders for this customer
     orders = Order.objects.filter(customer_email=request.user.email).order_by('-created_at')
-    orders = Order.objects.filter(customer_email__iexact=request.user.email).order_by('-created_at')
+    #orders = Order.objects.filter(customer_email__iexact=request.user.email).order_by('-created_at')
     
     # Handle billing address update
     if request.method == 'POST':
