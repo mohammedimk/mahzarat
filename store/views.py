@@ -602,7 +602,11 @@ def admin_orders(request):
     """Custom view layout to track customer order data and process fast checkbox updates"""
     if not request.user.is_staff:
         return redirect('store:admin_login')
-    
+    # Inside your processing orders view function/class:
+    if request.method == "POST" and "clear_all_orders" in request.POST:
+        Order.objects.all().delete()
+        return redirect('store:admin_orders') # Adjust this named URL to match your processing orders page URL route
+        
     # 🚀 NEW: Intercept checkbox verification state updates safely
     if request.method == 'POST' and 'update_status_id' in request.POST:
         order_id_attr = request.POST.get('update_status_id')
