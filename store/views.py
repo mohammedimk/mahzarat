@@ -746,7 +746,7 @@ def customer_dashboard(request):
         'form': form,
         'orders': orders, # This passes the fetched orders to your {% if orders %} template check
     }
-    return render(request, 'store/dashboard.html', context) # Replace with your actual template path
+    return render(request, 'store/customer/dashboard.html', context) # Replace with your actual template path
 
 
 
