@@ -149,9 +149,15 @@ class Order(models.Model):
         ('completed', 'Completed'),
         ('cancelled', 'Cancelled'),
     ]
-    
+
     is_delivered = models.BooleanField(default=False)
     delivered_at = models.DateTimeField(blank=True, null=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        managed = True  # MUST BE TRUE so Django manages the table updates
+    
+   
     
     # Order tracking
     order_id = models.CharField(max_length=50, unique=True)  
