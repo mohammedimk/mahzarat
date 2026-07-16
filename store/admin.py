@@ -59,32 +59,32 @@ class BankAccountAdmin(admin.ModelAdmin):
 # ORDER ADMIN - For tracking customer orders
 # =====================================================================
 
-@admin.register(Order)
-class OrderAdmin(admin.ModelAdmin):
-    """
-    Admin interface for managing customer orders.
-    Shows payment status, customer details, and order contents.
-    """
-    list_display = ('order_id', 'customer_name', 'total_amount', 'status', 'created_at')
-    list_filter = ('status', 'created_at')
-    search_fields = ('order_id', 'customer_name', 'customer_email', 'customer_phone')
-    readonly_fields = ('order_id', 'created_at', 'cart_items')
+# @admin.register(Order)
+# class OrderAdmin(admin.ModelAdmin):
+#     """
+#     Admin interface for managing customer orders.
+#     Shows payment status, customer details, and order contents.
+#     """
+#     list_display = ('order_id', 'customer_name', 'total_amount', 'status', 'created_at')
+#     list_filter = ('status', 'created_at')
+#     search_fields = ('order_id', 'customer_name', 'customer_email', 'customer_phone')
+#     readonly_fields = ('order_id', 'created_at', 'cart_items')
     
-    fieldsets = (
-        ('Order Information', {
-            'fields': ('order_id', 'status', 'created_at')
-        }),
-        ('Customer Details', {
-            'fields': ('customer_name', 'customer_email', 'customer_phone')
-        }),
-        ('Order Contents', {
-            'fields': ('cart_items', 'total_amount')
-        }),
-    )
+#     fieldsets = (
+#         ('Order Information', {
+#             'fields': ('order_id', 'status', 'created_at')
+#         }),
+#         ('Customer Details', {
+#             'fields': ('customer_name', 'customer_email', 'customer_phone')
+#         }),
+#         ('Order Contents', {
+#             'fields': ('cart_items', 'total_amount')
+#         }),
+#     )
     
-    def has_delete_permission(self, request):
-        """Prevent accidental deletion of orders"""
-        return False
+#     def has_delete_permission(self, request):
+#         """Prevent accidental deletion of orders"""
+#         return False
 
 
 
