@@ -20,8 +20,7 @@
           </div>
         </div>
 
-
-<div class="status-timeline">
+        <div class="status-timeline">
           <div class="timeline-item {% if order.status != 'cancelled' %}completed{% endif %}">
             <div class="timeline-dot">✓</div>
             <div class="timeline-content">
@@ -61,47 +60,6 @@
           </div>
         </div>
 
-        
-
-
-
-<!-- 
-
-
-        
-        <div class="status-timeline">
-          <div class="timeline-item {% if order.status != 'cancelled' %}completed{% endif %}">
-            <div class="timeline-dot">✓</div>
-            <div class="timeline-content">
-              <div class="timeline-title">Order Placed</div>
-              <div class="timeline-date">{{ order.created_at|date:"M d, Y" }}</div>
-            </div>
-          </div>
-
-          <div class="timeline-item {% if order.status == 'completed' %}completed{% endif %}">
-            <div class="timeline-dot">{% if order.status == 'completed' %}✓{% else %}○{% endif %}</div>
-            <div class="timeline-content">
-              <div class="timeline-title">Payment Received</div>
-              {% if order.status == 'completed' %}
-                <div class="timeline-date">{{ order.completed_at|date:"M d, Y" }}</div>
-              {% else %}
-                <div class="timeline-date">Waiting for payment verification...</div>
-              {% endif %}
-            </div>
-          </div>
--->
-
-
-          
-          <div class="timeline-item {% if order.status == 'completed' %}active{% endif %}">
-            <div class="timeline-dot">{% if order.status == 'completed' %}⊙{% else %}○{% endif %}</div>
-            <div class="timeline-content">
-              <div class="timeline-title">Packing & Shipping</div>
-              <div class="timeline-date">Coming soon</div>
-            </div>
-          </div>
-        </div>
-
         <div class="status-details">
           <h3 class="serif">Items</h3>
           {% for item in order.cart_items %}
@@ -120,9 +78,13 @@
           <div class="pending-message">
             <p>✓ <strong>Payment received!</strong> We're verifying your transfer. You'll receive an email confirmation within 24 hours.</p>
           </div>
-        {% elif order.status == 'completed' %}
+        {% elif order.status == 'completed' and not order.is_delivered %}
           <div class="success-message">
             <p>✓ <strong>Payment confirmed!</strong> Your order is being prepared for shipment. You'll receive tracking details soon.</p>
+          </div>
+        {% elif order.is_delivered %}
+          <div class="success-message" style="background: #e8f5e9; border-left: 4px solid #2e7d32; color: #1b5e20;">
+            <p>✓ <strong>Delivered!</strong> Your package has been successfully delivered. Thank you for shopping with us!</p>
           </div>
         {% endif %}
 
@@ -146,7 +108,7 @@
       <div class="status-footer">
         <p>Questions about your order? Contact us:</p>
         <p>
-          <a href="mailto: mahzaratfashiondesingcompany@gmail.com"> mahzaratfashiondesingcompany@gmail.com</a> | 
+          <a href="mailto:mahzaratfashiondesingcompany@gmail.com">mahzaratfashiondesingcompany@gmail.com</a> | 
           <a href="tel:+23480135845210">+234 801 234 35845210</a>
         </p>
         <a href="{% url 'store:index' %}" class="btn" style="margin-top: 20px;">Back to Store</a>
