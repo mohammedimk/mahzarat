@@ -20,6 +20,55 @@
           </div>
         </div>
 
+
+<div class="status-timeline">
+          <div class="timeline-item {% if order.status != 'cancelled' %}completed{% endif %}">
+            <div class="timeline-dot">✓</div>
+            <div class="timeline-content">
+              <div class="timeline-title">Order Placed</div>
+              <div class="timeline-date">{{ order.created_at|date:"M d, Y" }}</div>
+            </div>
+          </div>
+
+          <div class="timeline-item {% if order.status == 'completed' or order.is_delivered %}completed{% elif order.status == 'pending' %}active{% endif %}">
+            <div class="timeline-dot">
+              {% if order.status == 'completed' or order.is_delivered %}✓{% elif order.status == 'pending' %}⊙{% else %}○{% endif %}
+            </div>
+            <div class="timeline-content">
+              <div class="timeline-title">Payment Received</div>
+              {% if order.status == 'completed' or order.is_delivered %}
+                <div class="timeline-date">{{ order.completed_at|date:"M d, Y" }}</div>
+              {% else %}
+                <div class="timeline-date">Waiting for payment verification...</div>
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="timeline-item {% if order.is_delivered %}completed{% elif order.status == 'completed' %}active{% endif %}">
+            <div class="timeline-dot">
+              {% if order.is_delivered %}✓{% elif order.status == 'completed' %}⊙{% else %}○{% endif %}
+            </div>
+            <div class="timeline-content">
+              <div class="timeline-title">Delivery Status</div>
+              {% if order.is_delivered %}
+                <div class="timeline-date">Delivered on {{ order.delivered_at|date:"M d, Y H:i" }}</div>
+              {% elif order.status == 'completed' %}
+                <div class="timeline-date">Order is packed and package is on its way!</div>
+              {% else %}
+                <div class="timeline-date">Pending shipment</div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+        
+
+
+
+<!-- 
+
+
+        
         <div class="status-timeline">
           <div class="timeline-item {% if order.status != 'cancelled' %}completed{% endif %}">
             <div class="timeline-dot">✓</div>
@@ -40,7 +89,10 @@
               {% endif %}
             </div>
           </div>
+-->
 
+
+          
           <div class="timeline-item {% if order.status == 'completed' %}active{% endif %}">
             <div class="timeline-dot">{% if order.status == 'completed' %}⊙{% else %}○{% endif %}</div>
             <div class="timeline-content">
