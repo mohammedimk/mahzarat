@@ -7,12 +7,28 @@
 
 {% block admin_content %}
 <div class="card">
-    <div class="card-head" style="margin-bottom: 20px;">
-        <h2>📦 Customer Purchase Orders</h2>
-        <span class="badge badge-featured" style="background-color: #1f4436; color: #fff; padding: 6px 12px;">
-            Total: {{ page_obj.paginator.count|default:0 }}
-        </span>
+
+<div class="card-head" style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <h2>📦 Customer Purchase Orders</h2>
+            <span class="badge badge-featured" style="background-color: #1f4436; color: #fff; padding: 6px 12px; border-radius: 4px;">
+                Total: {{ page_obj.paginator.count|default:0 }}
+            </span>
+        </div>
+        
+        {% if page_obj.object_list %}
+            <form method="POST" action="" onsubmit="return confirm('⚠️ WARNING: Are you absolutely sure you want to delete and clear ALL orders from the database? This action cannot be undone.');">
+                {% csrf_token %}
+                <input type="hidden" name="clear_all_orders" value="true">
+                <button type="submit" class="btn btn-danger" style="background-color: #dc2626; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: background-color 0.2s;">
+                    🗑️ Clear All Orders
+                </button>
+            </form>
+        {% endif %}
     </div>
+
+
+    
 
     <table>
         <thead>
