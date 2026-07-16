@@ -26,7 +26,7 @@ def reverse(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('store', ''),
+        ('store', '0006_add_delivery_status'),
     ]
 
     operations = [
