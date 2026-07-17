@@ -54,7 +54,7 @@
               {% elif order.status == 'completed' %}
                 <div class="timeline-date">Order is packed and package is on its way!</div>
               {% else %}
-                <div class="timeline-date">Pending shipment</div>
+                <div class="timeline-date"> {{ order.get_status_display }}</div>
               {% endif %}
             </div>
           </div>
