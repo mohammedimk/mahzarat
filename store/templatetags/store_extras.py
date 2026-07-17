@@ -1,5 +1,7 @@
 from django import template
 from django.conf import settings
+from django.contrib.auth.models import User
+
 
 register = template.Library()
 
@@ -35,10 +37,6 @@ def get_item(dictionary, key):
 
 
 #from django import template
-from django.contrib.auth.models import User
-
-register = template.Library()
-
 
 
 @register.filter(name='get_customer_profile')
