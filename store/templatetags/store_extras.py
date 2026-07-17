@@ -29,3 +29,30 @@ def get_item(dictionary, key):
     if not dictionary:
         return None
     return dictionary.get(key)
+
+
+
+
+
+#from django import template
+from django.contrib.auth.models import User
+
+register = template.Library()
+
+
+
+@register.filter(name='get_customer_profile')
+def get_customer_profile(email):
+    """
+    Safely resolves profile relationships from a string email parameter 
+    to extract billing structural fields across layout boundaries.
+    """
+    if not email:
+        return None
+    try:
+        user = User.objects.get(email__iexact=email)
+        # Tries the standard related_name configurations mapping back to User
+        profile = getattr(user, 'profile', getattr(user, 'customer_profile', None))
+        return profile
+    except Exception:
+        return None
