@@ -36,6 +36,7 @@
             <div class="timeline-content">
               <div class="timeline-title">Payment Received</div>
               {% if order.status == 'completed' or order.is_delivered %}
+                <div class="timeline-date">{{ order.status }}</div>
                 <div class="timeline-date">{{ order.completed_at|date:"M d, Y" }}</div>
               {% else %}
                 <div class="timeline-date">Waiting for payment verification...</div>
