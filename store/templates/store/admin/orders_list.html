@@ -61,6 +61,7 @@
                         <strong style="color: #1f4436;">{{ order.customer_name }}</strong><br>
                         <span style="font-size: 0.85rem; color: #555;">✉️ {{ order.customer_email }}</span><br>
                         <span style="font-size: 0.85rem; color: #555;">📞 {{ order.customer_phone }}</span>
+                          <span style="font-size: 0.85rem; color: #555;">{{ customer_profile.billing_address }}</span>
 
                         {# Safely fetch profile data via customer_email lookup helper #}
                         {% if order.customer_email %}
